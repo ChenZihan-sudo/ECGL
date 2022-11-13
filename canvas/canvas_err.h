@@ -1,0 +1,13 @@
+#ifndef CANVAS_ERR_H
+#define CANVAS_ERR_H
+
+typedef int canvas_err_t;
+#define CANVAS_OK 0
+#define CANVAS_FAIL -1
+#define CANVAS_FAIL_DATA_UNVALID -2
+
+#define CANVAS_AREA_TRUNCATED 0x1000
+#define GRAPH_AREA_TRUNCATED 0x1001
+#define CANVAS_IDM_OUT_AREA_WRITE 0x1002
+#define CANVAS_IDM_OUT_AREA_READ 0x1003
+#endif
