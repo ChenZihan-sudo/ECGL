@@ -5,7 +5,7 @@
 
 //* Shader system
 
-typedef size_t PRIORITY_id;
+typedef int PRIORITY_id;
 extern PRIORITY_id priority;
 
 typedef struct ShaderContainer ShaderContainer_t;
@@ -24,7 +24,7 @@ enum ShaderContainer_enum
 {
     SPOINT_RGB888 = 0x00,
     SPOINT_RGBA32 = 0x01,
-    SLINE = 0x02
+    // SLINE = 0x02
 };
 
 //* Iterator

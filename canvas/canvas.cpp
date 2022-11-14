@@ -597,16 +597,16 @@ void stroke(CanvaHandle_ptr hdl)
                 IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
             }
             break;
-            case SLINE:
-            {
-                sLine_ptr sli = (sLine_ptr)scon->data;
+            // case SLINE:
+            // {
+            //     sLine_ptr sli = (sLine_ptr)scon->data;
 
-                if (sli->antialiasing)
-                    strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
-                else
-                    strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
-            }
-            break;
+            //     if (sli->antialiasing)
+            //         strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
+            //     else
+            //         strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
+            // }
+            // break;
             }
         }
     }
