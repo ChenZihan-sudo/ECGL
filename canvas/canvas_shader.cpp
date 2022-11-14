@@ -126,13 +126,13 @@ ShaderContainer_ptr newSPointRGB888(int x, int y)
     return newShaderContainer(x, y, SPOINT_RGB888, nullptr, priority);
 }
 
-//* Line
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
-{
-    sLine_ptr pt = nullptr;
-    pt = (sLine_ptr)malloc(sizeof(sLine_t));
-    pt->x1 = x1;
-    pt->y1 = y1;
-    pt->antialiasing = antialiasing;
-    return newShaderContainer(x0, y0, SLINE, (void *)pt, priority);
-}
+// //* Line
+// ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
+// {
+//     sLine_ptr pt = nullptr;
+//     pt = (sLine_ptr)malloc(sizeof(sLine_t));
+//     pt->x1 = x1;
+//     pt->y1 = y1;
+//     pt->antialiasing = antialiasing;
+//     return newShaderContainer(x0, y0, SLINE, (void *)pt, priority);
+// }

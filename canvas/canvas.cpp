@@ -577,54 +577,88 @@ void stroke(CanvaHandle_ptr hdl)
     uint8_t colorH8b = (rgb888 >> 8) & 0xFF;
     uint8_t colorL8b = rgb888 & 0xFF;
 
-    size_t i, end = hdl->scanLineMax;
-    for (i = hdl->scanLineMin; i <= end; i++)
+    Iterator_ptr itor = newShaderInfoIterator(hdl);
+    int curY;
+    ShaderContainer_ptr scon = nullptr;
+    while (!shaderInfoIterateEnd(itor))
     {
-        LinkList_ptr info = hdl->pathInfo[i];
-        if (info != NULL)
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderInfo(itor);
+        if (scon != nullptr)
         {
-            LinkList_ptr ptr = info;
-            for (;;)
+            switch (scon->TYPE)
             {
-                ShaderContainer_ptr scon = (ShaderContainer_ptr)ptr->data;
-
-                switch (scon->TYPE)
-                {
-                case SPOINT_RGB888: 
-                    IDM_writeColor(scon->x, scon->y, colorH8b, colorL8b);
-                    break;
-                case SPOINT_RGBA32:
-                {
-                    sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
-                    IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
-                }
+            case SPOINT_RGB888:
+                IDM_writeColor(scon->x, scon->y, colorH8b, colorL8b);
                 break;
-                case SLINE:
-                {
-                    sLine_ptr sli = (sLine_ptr)scon->data;
+            case SPOINT_RGBA32:
+            {
+                sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
+                IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
+            }
+            break;
+            case SLINE:
+            {
+                sLine_ptr sli = (sLine_ptr)scon->data;
 
-                    if (sli->antialiasing)
-                        strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
-                    else
-                        strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
-                }
-                break;
-
-                default:
-                    break;
-                }
-
-                // XET_ptr xetInfo = (XET_ptr)ptr->data;
-                // printf("[%d,%d-%d,%d]\n", xetInfo->ax, i, xetInfo->bx, xetInfo->by);
-                // strokeLine(hdl, xetInfo->ax, i, xetInfo->bx, xetInfo->by);
-
-                if (ptr->next != NULL)
-                    ptr = ptr->next;
+                if (sli->antialiasing)
+                    strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
                 else
-                    break;
+                    strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
+            }
+            break;
             }
         }
     }
+
+    // size_t i, end = hdl->scanLineMax;
+    // for (i = hdl->scanLineMin; i <= end; i++)
+    // {
+    //     LinkList_ptr info = hdl->pathInfo[i];
+    //     if (info != NULL)
+    //     {
+    //         LinkList_ptr ptr = info;
+    //         for (;;)
+    //         {
+    //             ShaderContainer_ptr scon = (ShaderContainer_ptr)ptr->data;
+
+    //             switch (scon->TYPE)
+    //             {
+    //             case SPOINT_RGB888:
+    //                 IDM_writeColor(scon->x, scon->y, colorH8b, colorL8b);
+    //                 break;
+    //             case SPOINT_RGBA32:
+    //             {
+    //                 sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
+    //                 IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
+    //             }
+    //             break;
+    //             case SLINE:
+    //             {
+    //                 sLine_ptr sli = (sLine_ptr)scon->data;
+
+    //                 if (sli->antialiasing)
+    //                     strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
+    //                 else
+    //                     strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
+    //             }
+    //             break;
+
+    //             default:
+    //                 break;
+    //             }
+
+    //             // XET_ptr xetInfo = (XET_ptr)ptr->data;
+    //             // printf("[%d,%d-%d,%d]\n", xetInfo->ax, i, xetInfo->bx, xetInfo->by);
+    //             // strokeLine(hdl, xetInfo->ax, i, xetInfo->bx, xetInfo->by);
+
+    //             if (ptr->next != NULL)
+    //                 ptr = ptr->next;
+    //             else
+    //                 break;
+    //         }
+    //     }
+    // }
 };
 
 // TODO: OPTIMITE THIS CODE
@@ -777,7 +811,7 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
     st = releaseStack(st);
 };
 
-void fill(CanvaHandle_ptr hdl)
+void fill(CanvaHandle_ptr hdl) 
 {
     // Use Scanline Fill Algorithm
     LinkList_ptr AET = NULL;
