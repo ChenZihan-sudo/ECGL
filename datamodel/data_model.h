@@ -8,7 +8,7 @@ struct LinkList
 {
     void *data;
     LinkList_ptr next;
-};             
+};
 LinkList_ptr newLinkListNode(LinkList_ptr linklist, void *data);
 LinkList_ptr sortNewLinkListNode(LinkList_ptr linklist, void *data,
                                  bool (*compare)(void *data1, void *data2));
@@ -38,6 +38,7 @@ bool stackEmpty(Stack_ptr st);
 Stack_ptr releaseStack(Stack_ptr st);
 
 // HINT: This structure not finshed yet.
+#if 0
 // * StackX
 typedef struct StackX StackX_t;
 typedef struct StackX *StackX_ptr;
@@ -54,6 +55,7 @@ size_t stackXSize(StackX_ptr st);
 void *stackXTop(StackX_ptr st);
 bool stackXEmpty(StackX_ptr st);
 StackX_ptr releaseStackX(StackX_ptr st);
+#endif
 
 // * Queue
 typedef struct Queue Queue_t;
@@ -97,5 +99,20 @@ bool queueXEmpty(QueueX_ptr que);
 bool queueXFull(QueueX_ptr que);
 size_t queueXSize(QueueX_ptr que);
 QueueX_ptr releaseQueueX(QueueX_ptr queue);
+
+// * Array
+typedef struct Array Array_t;
+typedef struct Array *Array_ptr;
+struct Array
+{
+    size_t size;
+    size_t maxCapacity; // HINT: Set to 0 will regard as no limit
+    void **arr;
+};
+Array_ptr newArray(size_t size);
+void *arrData(Array_ptr arr, size_t posi);
+void *arrWrite(Array_ptr arr, size_t posi, void *value);
+bool arrFull(Array_ptr arr);
+size_t arrSize(Array_ptr arr);
 
 #endif

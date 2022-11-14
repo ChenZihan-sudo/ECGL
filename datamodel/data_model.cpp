@@ -1,5 +1,5 @@
 //#ifdef __cplusplus
-//extern "C"
+// extern "C"
 //{
 //#endif
 
@@ -23,7 +23,6 @@
 #define nullptr NULL
 #define bool short
 #endif
-
 
 // * Link List
 LinkList_ptr newLinkListNode(LinkList_ptr linklist, void *data)
@@ -522,5 +521,48 @@ QueueX_ptr releaseQueueX(QueueX_ptr que)
     return (que = nullptr);
 };
 
-//使用可变数组
-//如果读取数据，可以按照顺序排列后使用快速排序
+//* Array
+Array_ptr newArray(size_t size)
+{
+    Array_ptr arr = nullptr;
+    arr = (Array_ptr)malloc(sizeof(Array_t));
+    arr->size = size;
+    arr->maxCapacity = 0;
+    arr->arr = (void **)malloc(size * sizeof(void *));
+    return arr;
+}
+
+void *arrData(Array_ptr arr, size_t posi)
+{
+    if (posi < arr->size)
+        return arr->arr[posi];
+    return NULL;
+};
+
+void *arrWrite(Array_ptr arr, size_t posi, void *value)
+{
+    if (arr->maxCapacity == 0)
+    {
+        if (arr->size >= arr->maxCapacity)
+        {
+
+
+
+            
+        }
+    }
+    return NULL;
+};
+
+bool arrFull(Array_ptr arr)
+{
+    if (arr->maxCapacity != 0)
+        if (arr->size >= arr->maxCapacity)
+            return true;
+    return false;
+};
+
+size_t arrSize(Array_ptr arr)
+{
+    return arr->size;
+};
