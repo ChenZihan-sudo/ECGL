@@ -589,76 +589,27 @@ void stroke(CanvaHandle_ptr hdl)
             switch (scon->TYPE)
             {
             case SPOINT_RGB888:
-                IDM_writeColor(scon->x, scon->y, colorH8b, colorL8b);
+                IDM_writeColor(scon->x, curY, colorH8b, colorL8b);
                 break;
             case SPOINT_RGBA32:
             {
                 sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
-                IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
+                IDM_writeAlphaBlendColor(scon->x, curY, rgb888, sp32->alpha);
             }
             break;
-            // case SLINE:
-            // {
-            //     sLine_ptr sli = (sLine_ptr)scon->data;
+            case SLINE:
+            {
+                sLine_ptr sli = (sLine_ptr)scon->data;
 
-            //     if (sli->antialiasing)
-            //         strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
-            //     else
-            //         strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
-            // }
-            // break;
+                if (sli->antialiasing)
+                    strokeLineAA(hdl, scon->x, curY, sli->x1, sli->y1);
+                else
+                    strokeLine(hdl, scon->x, curY, sli->x1, sli->y1);
+            }
+            break;
             }
         }
     }
-
-    // size_t i, end = hdl->scanLineMax;
-    // for (i = hdl->scanLineMin; i <= end; i++)
-    // {
-    //     LinkList_ptr info = hdl->pathInfo[i];
-    //     if (info != NULL)
-    //     {
-    //         LinkList_ptr ptr = info;
-    //         for (;;)
-    //         {
-    //             ShaderContainer_ptr scon = (ShaderContainer_ptr)ptr->data;
-
-    //             switch (scon->TYPE)
-    //             {
-    //             case SPOINT_RGB888:
-    //                 IDM_writeColor(scon->x, scon->y, colorH8b, colorL8b);
-    //                 break;
-    //             case SPOINT_RGBA32:
-    //             {
-    //                 sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
-    //                 IDM_writeAlphaBlendColor(scon->x, scon->y, rgb888, sp32->alpha);
-    //             }
-    //             break;
-    //             case SLINE:
-    //             {
-    //                 sLine_ptr sli = (sLine_ptr)scon->data;
-
-    //                 if (sli->antialiasing)
-    //                     strokeLineAA(hdl, scon->x, scon->y, sli->x1, sli->y1);
-    //                 else
-    //                     strokeLine(hdl, scon->x, scon->y, sli->x1, sli->y1);
-    //             }
-    //             break;
-
-    //             default:
-    //                 break;
-    //             }
-
-    //             // XET_ptr xetInfo = (XET_ptr)ptr->data;
-    //             // printf("[%d,%d-%d,%d]\n", xetInfo->ax, i, xetInfo->bx, xetInfo->by);
-    //             // strokeLine(hdl, xetInfo->ax, i, xetInfo->bx, xetInfo->by);
-
-    //             if (ptr->next != NULL)
-    //                 ptr = ptr->next;
-    //             else
-    //                 break;
-    //         }
-    //     }
-    // }
 };
 
 // TODO: OPTIMITE THIS CODE

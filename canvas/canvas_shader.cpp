@@ -94,11 +94,10 @@ bool shaderInfoIterateEnd(Iterator_ptr itor)
 static PRIORITY_id priority = 0;
 
 //* Shader Container
-ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data, PRIORITY_id priority)
+ShaderContainer_ptr newShaderContainer(int x, int containerType, void *data, PRIORITY_id priority)
 {
     ShaderContainer_ptr scon = (ShaderContainer_ptr)malloc(sizeof(ShaderContainer_t));
     scon->x = x;
-    scon->y = y;
     scon->TYPE = containerType;
     scon->data = data;
     scon->priority = priority;
@@ -111,28 +110,28 @@ ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
 };
 
 //* Point RGBA32
-ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha, PRIORITY_id priority)
+ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha, PRIORITY_id priority)
 {
     sPointRGBA32_ptr pt = nullptr;
     pt = (sPointRGBA32_ptr)malloc(sizeof(sPointRGBA32_t));
     pt->keyPoint = keyPoint;
     pt->alpha = alpha;
-    return newShaderContainer(x, y, SPOINT_RGBA32, (void *)pt, priority);
+    return newShaderContainer(x, SPOINT_RGBA32, (void *)pt, priority);
 }
 
 //* Point RGB888
-ShaderContainer_ptr newSPointRGB888(int x, int y)
+ShaderContainer_ptr newSPointRGB888(int x)
 {
-    return newShaderContainer(x, y, SPOINT_RGB888, nullptr, priority);
+    return newShaderContainer(x, SPOINT_RGB888, nullptr, priority);
 }
 
-// //* Line
-// ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
-// {
-//     sLine_ptr pt = nullptr;
-//     pt = (sLine_ptr)malloc(sizeof(sLine_t));
-//     pt->x1 = x1;
-//     pt->y1 = y1;
-//     pt->antialiasing = antialiasing;
-//     return newShaderContainer(x0, y0, SLINE, (void *)pt, priority);
-// }
+//* Line
+ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
+{
+    sLine_ptr pt = nullptr;
+    pt = (sLine_ptr)malloc(sizeof(sLine_t));
+    pt->x1 = x1;
+    pt->y1 = y1;
+    pt->antialiasing = antialiasing;
+    return newShaderContainer(x0, SLINE, (void *)pt, priority);
+}

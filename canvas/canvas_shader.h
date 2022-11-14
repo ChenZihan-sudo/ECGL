@@ -12,19 +12,19 @@ typedef struct ShaderContainer ShaderContainer_t;
 typedef struct ShaderContainer *ShaderContainer_ptr;
 struct ShaderContainer
 {
-    int x, y;
+    int x;
     int TYPE;
     void *data;
     PRIORITY_id priority;
 };
-ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data, PRIORITY_id priority);
+ShaderContainer_ptr newShaderContainer(int x, int containerType, void *data, PRIORITY_id priority);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
 
 enum ShaderContainer_enum
 {
     SPOINT_RGB888 = 0x00,
     SPOINT_RGBA32 = 0x01,
-    // SLINE = 0x02
+    SLINE = 0x02
 };
 
 //* Iterator
@@ -56,10 +56,10 @@ struct sPointRGBA32
     bool keyPoint;
     uint8_t alpha;
 };
-ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha, PRIORITY_id priority);
+ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha, PRIORITY_id priority);
 
 //* Point RGB888
-ShaderContainer_ptr newSPointRGB888(int x, int y, PRIORITY_id priority);
+ShaderContainer_ptr newSPointRGB888(int x, PRIORITY_id priority);
 
 //* Line
 typedef struct sLine sLine_t;
