@@ -527,7 +527,6 @@ Array_ptr newArray(size_t size)
     Array_ptr arr = nullptr;
     arr = (Array_ptr)malloc(sizeof(Array_t));
     arr->size = size;
-    arr->maxCapacity = 0;
     arr->arr = (void **)malloc(size * sizeof(void *));
     return arr;
 }
@@ -539,26 +538,29 @@ void *arrData(Array_ptr arr, size_t posi)
     return NULL;
 };
 
-void *arrWrite(Array_ptr arr, size_t posi, void *value)
+bool arrWrite(Array_ptr arr, size_t posi, void *data)
 {
-    if (arr->maxCapacity == 0)
+    if (posi < arr->size)
     {
-        if (arr->size >= arr->maxCapacity)
+        arr->arr[posi] = data;
+        return true;
+    }
+    return false;
+}
+
+bool arrExtendTo(Array_ptr arr, size_t size)
+{
+    if (size > arr->size)
+    {
+        void **res = (void **)realloc(arr->arr, size * sizeof(void *));
+        if (res != nullptr)
         {
-
-
-
-            
+            arr->arr = res;
+            arr->size = size;
+            return true;
         }
     }
-    return NULL;
-};
 
-bool arrFull(Array_ptr arr)
-{
-    if (arr->maxCapacity != 0)
-        if (arr->size >= arr->maxCapacity)
-            return true;
     return false;
 };
 

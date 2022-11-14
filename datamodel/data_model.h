@@ -105,14 +105,12 @@ typedef struct Array Array_t;
 typedef struct Array *Array_ptr;
 struct Array
 {
-    size_t size;
-    size_t maxCapacity; // HINT: Set to 0 will regard as no limit
+    size_t size; 
     void **arr;
 };
 Array_ptr newArray(size_t size);
 void *arrData(Array_ptr arr, size_t posi);
-void *arrWrite(Array_ptr arr, size_t posi, void *value);
-bool arrFull(Array_ptr arr);
+bool arrExtendTo(Array_ptr arr, size_t posi);
 size_t arrSize(Array_ptr arr);
 
 #endif
