@@ -22,7 +22,7 @@
 #ifndef __cplusplus
 #define true 1
 #define false 0
-#define nullptr NULL
+#define nullptr NULL   
 #define bool short
 #endif
 
