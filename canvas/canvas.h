@@ -39,7 +39,9 @@ struct CanvaHandle
     int peny;
 
     LinkList_ptr *shaderInfo;
-    LinkList_ptr *pathInfo;
+    Array_ptr *shaderArr;
+
+    // LinkList_ptr *pathInfo;
 
     bool pathOperated;
     int beginPenx;

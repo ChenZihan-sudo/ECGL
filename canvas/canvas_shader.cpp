@@ -125,13 +125,37 @@ ShaderContainer_ptr newSPointRGB888(int x)
     return newShaderContainer(x, SPOINT_RGB888, nullptr, priority);
 }
 
-//* Line
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
+// //* Line
+// ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
+// {
+//     sLine_ptr pt = nullptr;
+//     pt = (sLine_ptr)malloc(sizeof(sLine_t));
+//     pt->x1 = x1;
+//     pt->y1 = y1;
+//     pt->antialiasing = antialiasing;
+//     return newShaderContainer(x0, SLINE, (void *)pt, priority);
+// }
+
+bool shaderPointCompare(void *data1, void *data2)
 {
-    sLine_ptr pt = nullptr;
-    pt = (sLine_ptr)malloc(sizeof(sLine_t));
-    pt->x1 = x1;
-    pt->y1 = y1;
-    pt->antialiasing = antialiasing;
-    return newShaderContainer(x0, SLINE, (void *)pt, priority);
+    ShaderContainer_ptr scon1 = (ShaderContainer_ptr)data1;
+    ShaderContainer_ptr scon2 = (ShaderContainer_ptr)data2;
+    return scon1->x < scon2->x;
+}
+
+void writeSPoint(CanvaHandle_ptr hd, int x, int y)
+{
+    LinkList_ptr *shaderInfo = hd->shaderInfo;
+    Array_ptr *shaderArr = hd->shaderArr;
+
+    ShaderContainer_ptr scon = newSPointRGB888(x);
+    sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
+    
+    if (shaderArr[y] == nullptr)
+        shaderArr[y] = newArray(1);
+    
+}
+
+void writeSPointA(CanvaHandle_ptr hd, int x, int y, uint8_t alpha, bool keyPoint)
+{
 }

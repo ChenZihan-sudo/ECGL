@@ -105,12 +105,13 @@ typedef struct Array Array_t;
 typedef struct Array *Array_ptr;
 struct Array
 {
-    size_t size; 
+    size_t size;
     void **arr;
 };
 Array_ptr newArray(size_t size);
 void *arrData(Array_ptr arr, size_t posi);
 bool arrWrite(Array_ptr arr, size_t posi, void *data);
 size_t arrSize(Array_ptr arr);
+Array_ptr releaseArray(Array_ptr arr);
 
 #endif

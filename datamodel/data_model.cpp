@@ -543,7 +543,7 @@ bool arrWrite(Array_ptr arr, size_t posi, void *data)
     size_t size = posi + 1;
     if (size > arr->size)
     {
-        printf("DataExtend\n");
+        printf("Arr DataExtend\n");
         void **res = (void **)realloc(arr->arr, size * sizeof(void *));
         if (res != nullptr)
         {
@@ -566,3 +566,42 @@ size_t arrSize(Array_ptr arr)
 {
     return arr->size;
 };
+
+Array_ptr releaseArray(Array_ptr arr)
+{
+    releaser(arr->arr);
+    return (Array_ptr)releaser(arr);
+}
+
+// void *arrBinarySearch(Array_ptr arr, int (*compare)(void *target, void *data2))
+// {
+//     void **a = arr->arr;
+//     int left = 0;
+//     int right = arr->size - 1;
+//     int mid = (left + right) / 2;
+//     while (1)
+//     {
+//         compare(target);
+//         if (compare)
+//         {
+//             return mid;
+//         }
+
+//         if (target > mid)
+//         {
+//             left = mid + 1;
+//         }
+//         else
+//         {
+//             right = mid - 1;
+//         }
+
+//         if (left > right)
+//         {
+//             return -1;
+//         }
+
+//         mid = (left + right) / 2;
+//     }
+//     return NULL;
+// }

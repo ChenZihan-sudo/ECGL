@@ -22,7 +22,7 @@
 #ifndef __cplusplus
 #define true 1
 #define false 0
-#define nullptr NULL   
+#define nullptr NULL
 #define bool short
 #endif
 
@@ -149,8 +149,9 @@ void beginPath(CanvaHandle_ptr hdl)
 {
     if (hdl != nullptr)
     {
-        hdl->pathInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
-        hdl->shaderInfo = (LinkList_ptr*)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
+        // hdl->pathInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
+        hdl->shaderInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
+        hdl->shaderArr = (Array_ptr *)calloc(DISPLAY_HEIGHT, sizeof(Array_ptr));
         hdl->lineWidth = 1;
         hdl->lineBrushType = CANVAS_DEFAULT_BRUSH;
         hdl->rgb888 = 0x000000;
@@ -165,13 +166,14 @@ void beginPath(CanvaHandle_ptr hdl)
     else
     {
 
-        // Destory Edge Info
+        // Destory shaderInfo / Edge Info
     }
 };
 
 void moveTo(CanvaHandle_ptr hdl, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
+    priority++;
     hdl->penx = x;
     hdl->peny = y;
     hdl->beginPenx = x;
@@ -202,16 +204,11 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         by = y;
     }
 
-    ShaderContainer_ptr scon = newSLine(ax, ay, bx, by, true, 0);
+    
 
-    // XET_ptr edge = (XET_ptr)calloc(1, sizeof(XET_t));
-    // edge->ax = ax;
-    // edge->bx = bx;
-    // edge->by = by;
-    // edge->tm = 0.f;
+    // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
+    //     hdl->pathInfo[(size_t)ay], (void *)scon, compareET_lineTo);
 
-    hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
-        hdl->pathInfo[(size_t)ay], (void *)scon, compareET_lineTo);
     hdl->penx = x;
     hdl->peny = y;
 };
@@ -482,7 +479,6 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
 
     bool brush1kCck = -1 <= k && k <= 1;
 
-    // OPTIMIZE
     for (i = 0; i <= totalCount; i++)
     {
         if (hdl->lineWidth > 1)
@@ -518,7 +514,6 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
                 {
                     for (int j = -mid; j < mid + 1; j++)
                     {
-                        // printf("Draw %d %d\n", j, i);
                         IDM_writeColor(x + j, y + i, colorH8b, colorL8b);
                         IDM_writeColor(x + j, y + i, colorH8b, colorL8b);
                     }
@@ -762,108 +757,107 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
     st = releaseStack(st);
 };
 
-void fill(CanvaHandle_ptr hdl) 
-{
-    // Use Scanline Fill Algorithm
-    LinkList_ptr AET = NULL;
+void fill(CanvaHandle_ptr hdl){
+    // // Use Scanline Fill Algorithm
+    // LinkList_ptr AET = NULL;
 
-    size_t i, end = hdl->scanLineMax;
-    for (i = hdl->scanLineMin; i <= end; i++)
-    {
-        // Add the node to AET
-        if (hdl->pathInfo[i] != NULL)
-        {
-            LinkList_ptr xet = hdl->pathInfo[i];
-            for (;;)
-            {
-                XET_ptr xetData = (XET_ptr)xet->data;
+    // size_t i, end = hdl->scanLineMax;
+    // for (i = hdl->scanLineMin; i <= end; i++)
+    // {
+    //     // Add the node to AET
+    //     if (hdl->pathInfo[i] != NULL)
+    //     {
+    //         LinkList_ptr xet = hdl->pathInfo[i];
+    //         for (;;)
+    //         {
+    //             XET_ptr xetData = (XET_ptr)xet->data;
 
-                if (xetData->by - (float)i == 0.f)
-                    xetData->tm = 0.f;
-                else
-                    xetData->tm = (xetData->bx - xetData->ax) / (xetData->by - (float)i);
-                XET_ptr aetNode = (XET_ptr)malloc(sizeof(XET_t));
-                memcpy(aetNode, xet->data, sizeof(XET_t));
-                AET = newLinkListNode(AET, (void *)aetNode);
-                if (xet->next != NULL)
-                    xet = xet->next;
-                else
-                    break;
-            }
-        }
+    //             if (xetData->by - (float)i == 0.f)
+    //                 xetData->tm = 0.f;
+    //             else
+    //                 xetData->tm = (xetData->bx - xetData->ax) / (xetData->by - (float)i);
+    //             XET_ptr aetNode = (XET_ptr)malloc(sizeof(XET_t));
+    //             memcpy(aetNode, xet->data, sizeof(XET_t));
+    //             AET = newLinkListNode(AET, (void *)aetNode);
+    //             if (xet->next != NULL)
+    //                 xet = xet->next;
+    //             else
+    //                 break;
+    //         }
+    //     }
 
-        // Check the node in AET which need to remove from it
-        if (AET != NULL)
-        {
-            LinkList_ptr node = AET;
-            for (;;)
-            {
-                XET_ptr nodeInfo = (XET_ptr)node->data;
-                if (nodeInfo->by <= (float)i)
-                {
-                    LinkList_ptr nodeNext = node->next;
-                    //? OPTIMIZE: We can optimize it by writing its own delete func to avoid using deleteLinkListNode() to find node and loop again
-                    AET = deleteLinkListNode(AET, node);
-                    if (nodeNext != NULL)
-                        node = nodeNext;
-                    else
-                        break;
-                }
-                else
-                {
-                    if (node->next != NULL)
-                        node = node->next;
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-        }
+    //     // Check the node in AET which need to remove from it
+    //     if (AET != NULL)
+    //     {
+    //         LinkList_ptr node = AET;
+    //         for (;;)
+    //         {
+    //             XET_ptr nodeInfo = (XET_ptr)node->data;
+    //             if (nodeInfo->by <= (float)i)
+    //             {
+    //                 LinkList_ptr nodeNext = node->next;
+    //                 //? OPTIMIZE: We can optimize it by writing its own delete func to avoid using deleteLinkListNode() to find node and loop again
+    //                 AET = deleteLinkListNode(AET, node);
+    //                 if (nodeNext != NULL)
+    //                     node = nodeNext;
+    //                 else
+    //                     break;
+    //             }
+    //             else
+    //             {
+    //                 if (node->next != NULL)
+    //                     node = node->next;
+    //                 else
+    //                 {
+    //                     break;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // Sort the node
-        AET = sortLinkList(AET, compareET_fill);
+    //     // Sort the node
+    //     AET = sortLinkList(AET, compareET_fill);
 
-        if (AET != NULL)
-        {
-            // Draw the pixel
-            LinkList_ptr aetNode = AET;
-            uint16_t color = RGB888_to_RGB565(hdl->rgb888);
-            uint8_t colorH8b = (color >> 8) & 0xFF;
-            uint8_t colorL8b = color & 0xFF;
+    //     if (AET != NULL)
+    //     {
+    //         // Draw the pixel
+    //         LinkList_ptr aetNode = AET;
+    //         uint16_t color = RGB888_to_RGB565(hdl->rgb888);
+    //         uint8_t colorH8b = (color >> 8) & 0xFF;
+    //         uint8_t colorL8b = color & 0xFF;
 
-            while (aetNode != NULL)
-            {
-                // i: current y
-                // ax: current x
-                XET_ptr aetDataB = (XET_ptr)aetNode->data;
-                int drawBegin = (int)aetDataB->ax + 1;
-                aetNode = readLinkListNode(aetNode);
-                if (aetNode == NULL)
-                    break;
-                XET_ptr aetDataE = (XET_ptr)aetNode->data;
-                int drawEnd = (int)aetDataE->ax + 1;
+    //         while (aetNode != NULL)
+    //         {
+    //             // i: current y
+    //             // ax: current x
+    //             XET_ptr aetDataB = (XET_ptr)aetNode->data;
+    //             int drawBegin = (int)aetDataB->ax + 1;
+    //             aetNode = readLinkListNode(aetNode);
+    //             if (aetNode == NULL)
+    //                 break;
+    //             XET_ptr aetDataE = (XET_ptr)aetNode->data;
+    //             int drawEnd = (int)aetDataE->ax + 1;
 
-                // Draw
-                for (int drawX = drawBegin; drawX < drawEnd - 1; drawX++)
-                {
-                    int drawY = (int)i;
-                    IDM_writeColor(drawX, drawY, colorH8b, colorL8b);
-                }
+    //             // Draw
+    //             for (int drawX = drawBegin; drawX < drawEnd - 1; drawX++)
+    //             {
+    //                 int drawY = (int)i;
+    //                 IDM_writeColor(drawX, drawY, colorH8b, colorL8b);
+    //             }
 
-                aetNode = readLinkListNode(aetNode);
-            }
+    //             aetNode = readLinkListNode(aetNode);
+    //         }
 
-            // Update the AET nodes
-            aetNode = AET;
-            while (aetNode != NULL)
-            {
-                XET_ptr aetData = (XET_ptr)aetNode->data;
-                aetData->ax += aetData->tm;
-                aetNode = readLinkListNode(aetNode);
-            }
-        }
-    }
+    //         // Update the AET nodes
+    //         aetNode = AET;
+    //         while (aetNode != NULL)
+    //         {
+    //             XET_ptr aetData = (XET_ptr)aetNode->data;
+    //             aetData->ax += aetData->tm;
+    //             aetNode = readLinkListNode(aetNode);
+    //         }
+    //     }
+    // }
 };
 
 void drawCircle(CanvaHandle_ptr hdl, int x, int y, int radius)
@@ -1094,14 +1088,13 @@ void closePath(CanvaHandle_ptr hdl)
     }
 }
 
-void pathDestory(CanvaHandle_ptr hdl)
-{
-    for (int i = 0; i < 100; i++)
-    {
-        releaseLinkListNode(hdl->pathInfo[i]);
-        free(hdl->pathInfo[i]->data);
-    }
-    free(hdl->pathInfo);
+void pathDestory(CanvaHandle_ptr hdl){
+    // for (int i = 0; i < 100; i++)
+    // {
+    //     releaseLinkListNode(hdl->pathInfo[i]);
+    //     free(hdl->pathInfo[i]->data);
+    // }
+    // free(hdl->pathInfo);
 };
 
 void *releaser(void *pt)
