@@ -48,6 +48,17 @@ ShaderContainer_ptr nextShaderInfo(Iterator_ptr itor);
 int currentShaderInfoItorY(Iterator_ptr itor);
 bool shaderInfoIterateEnd(Iterator_ptr itor);
 
+//* Shader priority data container
+typedef struct SPriorityCon SPriorityCon_t;
+typedef struct SPriorityCon *SPriorityCon_ptr;
+//* Shader priority data container
+struct SPriorityCon
+{
+    int x;
+    PRIORITY_id id;
+};
+SPriorityCon_ptr newSPriorityCon(int x, PRIORITY_id id);
+
 //* Point RGBA32
 typedef struct sPointRGBA32 sPointRGBA32_t;
 typedef struct sPointRGBA32 *sPointRGBA32_ptr;

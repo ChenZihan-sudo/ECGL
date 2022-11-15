@@ -572,36 +572,3 @@ Array_ptr releaseArray(Array_ptr arr)
     releaser(arr->arr);
     return (Array_ptr)releaser(arr);
 }
-
-// void *arrBinarySearch(Array_ptr arr, int (*compare)(void *target, void *data2))
-// {
-//     void **a = arr->arr;
-//     int left = 0;
-//     int right = arr->size - 1;
-//     int mid = (left + right) / 2;
-//     while (1)
-//     {
-//         compare(target);
-//         if (compare)
-//         {
-//             return mid;
-//         }
-
-//         if (target > mid)
-//         {
-//             left = mid + 1;
-//         }
-//         else
-//         {
-//             right = mid - 1;
-//         }
-
-//         if (left > right)
-//         {
-//             return -1;
-//         }
-
-//         mid = (left + right) / 2;
-//     }
-//     return NULL;
-// }

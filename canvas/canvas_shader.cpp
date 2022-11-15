@@ -41,7 +41,7 @@ ShaderContainer_ptr nextShaderInfo(Iterator_ptr itor)
 
                 if (itor->data2 == nullptr)
                 {
-                    LinkList_ptr nextll = hdl->pathInfo[itor->val1];
+                    LinkList_ptr nextll = hdl->shaderInfo[itor->val1];
                     itor->data2 = (void *)nextll;
                     info = nextll;
                 }
@@ -93,6 +93,13 @@ bool shaderInfoIterateEnd(Iterator_ptr itor)
 
 static PRIORITY_id priority = 0;
 
+SPriorityCon_ptr newSPriorityCon(int x, PRIORITY_id id)
+{
+    SPriorityCon_ptr spcon = (SPriorityCon_ptr)malloc(sizeof(SPriorityCon_t));
+    spcon->x = x;
+    spcon->id = id;
+};
+
 //* Shader Container
 ShaderContainer_ptr newShaderContainer(int x, int containerType, void *data, PRIORITY_id priority)
 {
@@ -143,19 +150,137 @@ bool shaderPointCompare(void *data1, void *data2)
     return scon1->x < scon2->x;
 }
 
+bool shaderArrInsert(Array_ptr a, SPriorityCon_ptr spcon)
+{
+    if (a != nullptr)
+    {
+        void **ary = a->arr;
+
+        int left = 0;
+        int right = a->size - 1;
+        int mid = (left + right) / 2;
+        int ins = spcon->x;
+        int insPosi = -1;
+
+        if (ins < ((SPriorityCon_ptr)ary[left])->x)
+            return -1;
+        else if (ins > ((SPriorityCon_ptr)ary[right])->x)
+            return right + 1;
+        else
+            while (1)
+            {
+                if (ins < ((SPriorityCon_ptr)ary[mid])->x)
+                    right = mid;
+                else
+                    left = mid;
+                mid = (left + right) / 2;
+
+                if (right - left == 1)
+                {
+                    insPosi = right;
+                    break;
+                }
+            }
+
+        if (!arrWrite(a, a->size, nullptr))
+            return false;
+        if (insPosi == a->size - 1)
+            ary[insPosi] = (void *)spcon;
+        else
+        {
+            insPosi++;
+            void *buf = ary[insPosi];
+            ary[insPosi] = (void *)spcon;
+            for (size_t i = insPosi + 1; i < a->size; i++)
+            {
+                void *abuf = ary[i];
+                ary[i] = buf;
+                buf = abuf;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+int shaderArrSearch(Array_ptr a, int x)
+{
+    // Use Binary Search
+    if (a != nullptr)
+    {
+        void **Arr = a->arr;
+        int left = 0;
+        int right = a->size - 1;
+        int mid = (left + right) / 2;
+
+        while (1)
+        {
+            SPriorityCon_ptr spcon = (SPriorityCon_ptr)Arr[mid];
+
+            if (x == spcon->x)
+                return mid;
+
+            if (x > spcon->x)
+                left = mid + 1;
+            else
+                right = mid - 1;
+
+            if (left > right)
+                return -1;
+
+            mid = (left + right) / 2;
+        }
+    }
+
+    return -1;
+}
+
 void writeSPoint(CanvaHandle_ptr hd, int x, int y)
 {
     LinkList_ptr *shaderInfo = hd->shaderInfo;
     Array_ptr *shaderArr = hd->shaderArr;
 
+    // Create rgb888 point shader container
     ShaderContainer_ptr scon = newSPointRGB888(x);
     sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
-    
+
+    // Sync save priority data into array
     if (shaderArr[y] == nullptr)
         shaderArr[y] = newArray(1);
-    
+
+    int posi = shaderArrSearch(shaderArr[y], x);
+    if (posi != -1)
+        // Modify data due to priority
+        ((SPriorityCon_ptr)shaderArr[posi])->id = priority;
+    else
+    {
+        // Insert new data
+        SPriorityCon_ptr spcon = newSPriorityCon(x, priority);
+        shaderArrInsert(shaderArr[y], spcon);
+    }
 }
 
 void writeSPointA(CanvaHandle_ptr hd, int x, int y, uint8_t alpha, bool keyPoint)
 {
+    LinkList_ptr *shaderInfo = hd->shaderInfo;
+    Array_ptr *shaderArr = hd->shaderArr;
+
+    // Create rgba32 point shader container
+    ShaderContainer_ptr scon = newSPointRGBA32(x, keyPoint, alpha, priority);
+    sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
+
+    // Sync save priority data into array
+    if (shaderArr[y] == nullptr)
+        shaderArr[y] = newArray(1);
+
+    int posi = shaderArrSearch(shaderArr[y], x);
+    if (posi != -1)
+        // Modify data due to priority
+        ((SPriorityCon_ptr)shaderArr[posi])->id = priority;
+    else
+    {
+        // Insert new data
+        SPriorityCon_ptr spcon = newSPriorityCon(x, priority);
+        shaderArrInsert(shaderArr[y], spcon);
+    }
 }
