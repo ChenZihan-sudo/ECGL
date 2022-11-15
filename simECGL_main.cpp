@@ -19,7 +19,7 @@ int main(void)
         simECGL_setup();
         glDrawPixels(DP_WIDTH, DP_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, glImage);
         glfwSwapBuffers(mainECGLWindow); // Swap front and back buffers
-        glfwPollEvents(); // Poll for and process events
+        glfwPollEvents();                // Poll for and process events
     }
 
     glfwTerminate();
@@ -52,17 +52,17 @@ int simECGL_main()
     beginPath(ctx);
     ctx->rgb888 = 0xFF0000;
 
-     moveTo(ctx, 250, 50);
-     lineTo(ctx, 300, 90);
-     lineTo(ctx, 300, 100);
-     lineTo(ctx, 250, 100);
-     lineTo(ctx, 250, 50);
-     
-     ctx->rgb888 = 0x00FF00;
-     //fill(ctx);
-     ctx->rgb888 = 0xFF0000;
-     stroke(ctx);
-     floodFill(BOUNDARY_COLOR,251,51,0xFF0000,0x00FF00);
+    moveTo(ctx, 250, 50);
+    lineTo(ctx, 300, 90);
+    lineTo(ctx, 300, 100);
+    lineTo(ctx, 250, 100);
+    lineTo(ctx, 250, 50);
+
+    ctx->rgb888 = 0x00FF00;
+    // fill(ctx);
+    ctx->rgb888 = 0xFF0000;
+    stroke(ctx);
+    floodFill(BOUNDARY_COLOR, 251, 51, 0xFF0000, 0x00FF00);
 
     // ctx->rgb888 = 0x00FF00;
     // stroke(ctx);
@@ -84,11 +84,34 @@ int simECGL_main()
     // roundRect(ctx, 150, 50, 30, 30, 4, radii);
     // write_display_memory_on();
 
-	strokeLineAA(ctx, 50, 50, 100, 150);
+    strokeLineAA(ctx, 50, 50, 100, 150);
     write_display_memory_on();
 
-	strokeLine(ctx, 80, 50, 130, 150);
+    strokeLine(ctx, 80, 50, 130, 150);
     write_display_memory_on();
+
+    Array_ptr arr = newArray(5);
+
+    int val0 = 0;
+    int val1 = 1;
+    int val2 = 2;
+    int val3 = 3;
+    int val4 = 4;
+    int val5 = 5;
+
+    arrWrite(arr, 0, &val0);
+    arrWrite(arr, 1, &val1);
+    arrWrite(arr, 2, &val2);
+    arrWrite(arr, 3, &val3);
+    arrWrite(arr, 4, &val4);
+    arrWrite(arr, 5, &val5);
+
+    for (size_t i = 0; i < 6; i++)
+    {
+        int *val = (int *)arrData(arr, i);
+        printf("=>%d\n", *val);
+    }
+    printf("Size:%d\n", arr->size);
 
     return 0;
 }

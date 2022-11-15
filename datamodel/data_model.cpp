@@ -540,29 +540,27 @@ void *arrData(Array_ptr arr, size_t posi)
 
 bool arrWrite(Array_ptr arr, size_t posi, void *data)
 {
-    if (posi < arr->size)
-    {
-        arr->arr[posi] = data;
-        return true;
-    }
-    return false;
-}
-
-bool arrExtendTo(Array_ptr arr, size_t size)
-{
+    size_t size = posi + 1;
     if (size > arr->size)
     {
+        printf("DataExtend\n");
         void **res = (void **)realloc(arr->arr, size * sizeof(void *));
         if (res != nullptr)
         {
             arr->arr = res;
             arr->size = size;
+            arr->arr[posi] = data;
             return true;
         }
     }
+    else
+    {
+        arr->arr[posi] = data;
+        return true;
+    }
 
     return false;
-};
+}
 
 size_t arrSize(Array_ptr arr)
 {

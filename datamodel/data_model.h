@@ -110,7 +110,7 @@ struct Array
 };
 Array_ptr newArray(size_t size);
 void *arrData(Array_ptr arr, size_t posi);
-bool arrExtendTo(Array_ptr arr, size_t posi);
+bool arrWrite(Array_ptr arr, size_t posi, void *data);
 size_t arrSize(Array_ptr arr);
 
 #endif
