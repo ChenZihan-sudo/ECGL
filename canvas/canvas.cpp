@@ -155,7 +155,6 @@ void beginPath(CanvaHandle_ptr hdl)
 void moveTo(CanvaHandle_ptr hdl, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
-    priority++;
     hdl->penx = x;
     hdl->peny = y;
     hdl->beginPenx = x;

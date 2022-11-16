@@ -5,9 +5,6 @@
 
 //* Shader system
 
-typedef int PRIORITY_id;
-extern PRIORITY_id priority;
-
 typedef struct ShaderContainer ShaderContainer_t;
 typedef struct ShaderContainer *ShaderContainer_ptr;
 struct ShaderContainer
@@ -15,9 +12,8 @@ struct ShaderContainer
     int x;
     int TYPE;
     void *data;
-    PRIORITY_id priority;
 };
-ShaderContainer_ptr newShaderContainer(int x, int containerType, void *data, PRIORITY_id priority);
+ShaderContainer_ptr newShaderContainer(int x, int containerType, void *data);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
 
 enum ShaderContainer_enum
@@ -48,17 +44,6 @@ ShaderContainer_ptr nextShaderInfo(Iterator_ptr itor);
 int currentShaderInfoItorY(Iterator_ptr itor);
 bool shaderInfoIterateEnd(Iterator_ptr itor);
 
-//* Shader priority data container
-typedef struct SPriorityCon SPriorityCon_t;
-typedef struct SPriorityCon *SPriorityCon_ptr;
-//* Shader priority data container
-struct SPriorityCon
-{
-    int x;
-    PRIORITY_id id;
-};
-SPriorityCon_ptr newSPriorityCon(int x, PRIORITY_id id);
-
 //* Point RGBA32
 typedef struct sPointRGBA32 sPointRGBA32_t;
 typedef struct sPointRGBA32 *sPointRGBA32_ptr;
@@ -67,10 +52,10 @@ struct sPointRGBA32
     bool keyPoint;
     uint8_t alpha;
 };
-ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha, PRIORITY_id priority);
+ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha);
 
 //* Point RGB888
-ShaderContainer_ptr newSPointRGB888(int x, PRIORITY_id priority);
+ShaderContainer_ptr newSPointRGB888(int x);
 
 //* Line
 typedef struct sLine sLine_t;
@@ -81,6 +66,12 @@ struct sLine
     int y1;
     bool antialiasing;
 };
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority);
+ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing);
+
+//* Write to shader buffer API
+bool shaderPointCompare(void *data1, void *data2);
+void writeSPoint(LinkList_ptr *shaderInfo, int x, int y);
+void writeSPointA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint);
+void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing);
 
 #endif
