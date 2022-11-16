@@ -21,7 +21,7 @@ struct XET
 
 //* Canvas Main Structure
 typedef struct CanvaHandle CanvaHandle_t;
-typedef struct CanvaHandle* CanvaHandle_ptr;
+typedef struct CanvaHandle *CanvaHandle_ptr;
 struct CanvaHandle
 {
     int lineWidth;
@@ -35,14 +35,18 @@ struct CanvaHandle
 
     RGB888 rgb888;
 
+    // Current pen position
     int penx;
     int peny;
 
-    LinkList_ptr *shaderInfo;
-
-    bool pathOperated;
+    // Pen position when first call api function
     int beginPenx;
     int beginPeny;
+
+    LinkList_ptr *shaderInfo; // Store the shaderContainer info.
+
+    bool apiCalled;    // Tag: whether api function called first time.
+    bool antialiasing; // Tag: whether enable antialising
 
     size_t scanLineMin;
     size_t scanLineMax;
@@ -93,6 +97,8 @@ void scanlineFill(CanvaHandle_ptr hdl);
 void fill(CanvaHandle_ptr hdl);
 
 void drawCircle(CanvaHandle_ptr phd, int x, int y, int radius);
+void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
+// void arcInstanceAA(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 void arc(CanvaHandle_ptr phd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 
 void closePath(CanvaHandle_ptr hdl);

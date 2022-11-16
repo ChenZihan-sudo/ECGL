@@ -28,15 +28,15 @@
 
 // * Canvas Functions
 
-/// @brief Set Begin Point if necessary
+/// @brief Set Begin Point if it's the first call after beginPath()
 /// @return True if set success
 bool setBeginPoint(CanvaHandle_ptr hdl, int beginPenx, int beginPeny)
 {
-    if (!hdl->pathOperated)
+    if (!hdl->apiCalled)
     {
         hdl->beginPenx = beginPenx;
         hdl->beginPeny = beginPeny;
-        hdl->pathOperated = true;
+        hdl->apiCalled = true;
         return true;
     }
     return false;
@@ -137,7 +137,8 @@ void beginPath(CanvaHandle_ptr hdl)
         hdl->rgb888 = 0x000000;
         hdl->penx = 0;
         hdl->peny = 0;
-        hdl->pathOperated = false;
+        hdl->apiCalled = false;
+        hdl->antialiasing = true;
         hdl->beginPenx = 0;
         hdl->beginPeny = 0;
         hdl->scanLineMin = DISPLAY_HEIGHT - 1;
@@ -145,7 +146,6 @@ void beginPath(CanvaHandle_ptr hdl)
     }
     else
     {
-
         // Destory shaderInfo / Edge Info
     }
 };
@@ -157,7 +157,7 @@ void moveTo(CanvaHandle_ptr hdl, int x, int y)
     hdl->peny = y;
     hdl->beginPenx = x;
     hdl->beginPeny = y;
-    hdl->pathOperated = true;
+    hdl->apiCalled = true;
 };
 
 void lineTo(CanvaHandle_ptr hdl, int x, int y)
@@ -183,7 +183,7 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         by = y;
     }
 
-    writeSLine(hdl->shaderInfo, ax, ay, bx, by, true);
+    writeSLine(hdl->shaderInfo, ax, ay, bx, by, hdl->antialiasing);
 
     hdl->penx = x;
     hdl->peny = y;
@@ -937,7 +937,7 @@ bool arcDrawBorderChecker(int arcId, int drawX, int drawY, int drawPointX, int d
     return false;
 }
 
-void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
+void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
 {
     //* We cut the whole circle into 8 parts. And encode this parts by function parts8EncodeTool().
     //* We store this parts code into array arcs which is the parts we need to draw.
@@ -1041,8 +1041,21 @@ void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float 
 
     // TODO: Remove this
     IDM_writeColor(x, y, colorH8b, colorL8b);
+}
 
-    // * Set Begin Point if necessary
+void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
+{
+    // HINT this can be optimised if necessary.
+    float startDrawPointX = ((float)radius * cos(startAngle));
+    float startDrawPointY = ((float)radius * sin(startAngle));
+
+    float endDrawPointX = ((float)radius * cos(endAngle));
+    float endDrawPointY = ((float)radius * sin(endAngle));
+
+    writeSArc(hdl->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hdl->antialiasing);
+
+    // ! Do test here.
+    // * Set Begin Point if it's the first call after beginPath()
     if (anticlockwise)
         setBeginPoint(hdl, x + startDrawPointX, y + startDrawPointY);
     else
@@ -1050,9 +1063,9 @@ void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float 
 
     // * Move the pen to the end point
     if (anticlockwise)
-        movePen(hdl, x + endDrawPointX, y + endDrawPointY);
-    else
         movePen(hdl, x + startDrawPointX, y + startDrawPointY);
+    else
+        movePen(hdl, x + endDrawPointX, y + endDrawPointY);
 }
 
 void closePath(CanvaHandle_ptr hdl)
