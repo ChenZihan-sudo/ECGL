@@ -131,9 +131,7 @@ void beginPath(CanvaHandle_ptr hdl)
 {
     if (hdl != nullptr)
     {
-        // hdl->pathInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
         hdl->shaderInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
-        hdl->shaderArr = (Array_ptr *)calloc(DISPLAY_HEIGHT, sizeof(Array_ptr));
         hdl->lineWidth = 1;
         hdl->lineBrushType = CANVAS_DEFAULT_BRUSH;
         hdl->rgb888 = 0x000000;
@@ -183,10 +181,9 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         ay = hdl->peny;
         bx = x;
         by = y;
-    } 
-
-    // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
-    //     hdl->pathInfo[(size_t)ay], (void *)scon, compareET_lineTo);
+    }
+    
+    writeSLine(hdl->shaderInfo, ax, ay, bx, by, false);
 
     hdl->penx = x;
     hdl->peny = y;
@@ -558,8 +555,10 @@ void stroke(CanvaHandle_ptr hdl)
     {
         curY = currentShaderInfoItorY(itor);
         scon = nextShaderInfo(itor);
+        printf("Y: %d\n", curY);
         if (scon != nullptr)
         {
+            printf("TYPE %d\n", scon->TYPE);
             switch (scon->TYPE)
             {
             case SPOINT_RGB888:
@@ -569,6 +568,17 @@ void stroke(CanvaHandle_ptr hdl)
             {
                 sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
                 IDM_writeAlphaBlendColor(scon->x, curY, rgb888, sp32->alpha);
+            }
+            break;
+            case SLINE:
+            {
+
+                sLine_ptr sli = (sLine_ptr)scon->data;
+
+                if (sli->antialiasing)
+                    strokeLineAA(hdl, scon->x, curY, sli->x1, sli->y1);
+                else
+                    strokeLine(hdl, scon->x, curY, sli->x1, sli->y1);
             }
             break;
             }

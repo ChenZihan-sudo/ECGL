@@ -144,18 +144,18 @@ void writeSPoint(LinkList_ptr *shaderInfo, int x, int y)
 {
     // Create rgb888 point shader container
     ShaderContainer_ptr scon = newSPointRGB888(x);
-    sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
+    shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 
 void writeSPointA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint)
 {
     // Create rgba32 point shader container
     ShaderContainer_ptr scon = newSPointRGBA32(x, keyPoint, alpha);
-    sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
+    shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 
 void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing)
 {
     ShaderContainer_ptr scon = newSLine(x0, y0, x1, y1, antialiasing);
-    sortNewLinkListNode(shaderInfo[y0], (void *)scon, shaderPointCompare);
+    shaderInfo[y0] = sortNewLinkListNode(shaderInfo[y0], (void *)scon, shaderPointCompare);
 }

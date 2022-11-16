@@ -90,28 +90,5 @@ int simECGL_main()
     strokeLine(ctx, 80, 50, 130, 150);
     write_display_memory_on();
 
-    Array_ptr arr = newArray(5);
-
-    int val0 = 0;
-    int val1 = 1;
-    int val2 = 2;
-    int val3 = 3;
-    int val4 = 4;
-    int val5 = 5;
-
-    arrWrite(arr, 0, &val0);
-    arrWrite(arr, 1, &val1);
-    arrWrite(arr, 2, &val2);
-    arrWrite(arr, 3, &val3);
-    arrWrite(arr, 4, &val4);
-    arrWrite(arr, 5, &val5);
-
-    for (size_t i = 0; i < 6; i++)
-    {
-        int *val = (int *)arrData(arr, i);
-        printf("=>%d\n", *val);
-    }
-    printf("Size:%d\n", arr->size);
-
     return 0;
 }
