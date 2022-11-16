@@ -20,7 +20,10 @@ enum ShaderContainer_enum
 {
     SPOINT_RGB888 = 0x00,
     SPOINT_RGBA32 = 0x01,
-    SLINE = 0x02
+    SLINE = 0x02,
+
+    // Need resolve to points when fill
+    SARC = 0x03
 };
 
 //* Iterator
@@ -66,12 +69,27 @@ struct sLine
     int y1;
     bool antialiasing;
 };
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing);
+ShaderContainer_ptr newSLine(int x0, int x1, int y1, bool antialiasing);
+
+//* Arc
+typedef struct sArc sArc_t;
+typedef struct sArc *sArc_ptr;
+struct sArc
+{
+    int radius;
+    float startAngle;
+    float endAngle;
+    bool anticlockwise;
+    bool antialiasing;
+};
+ShaderContainer_ptr newSArc(int x, int radius, float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
 
 //* Write to shader buffer API
 bool shaderPointCompare(void *data1, void *data2);
 void writeSPoint(LinkList_ptr *shaderInfo, int x, int y);
-void writeSPointA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint);
+void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint);
 void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing);
+void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius,
+               float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
 
 #endif

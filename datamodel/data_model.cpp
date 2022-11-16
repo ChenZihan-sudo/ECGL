@@ -38,10 +38,8 @@ LinkList_ptr newLinkListNode(LinkList_ptr linklist, void *data)
 LinkList_ptr sortNewLinkListNode(LinkList_ptr linklist, void *data,
                                  bool (*compare)(void *data1, void *data2))
 {
-    printf("%x\n", linklist);
     if (linklist != NULL)
     {
-        printf("ok\n");
         bool first = true;
         LinkList_ptr oPtr = linklist;
         LinkList_ptr cPtr = linklist;

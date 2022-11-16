@@ -4,6 +4,7 @@
 #include "canvas/canvas.h"
 #include "canvas/canvas_ext.h"
 #include "canvas/canvas_config.h"
+#include "canvas/canvas_shader.h"
 #include "display/display_config.h"
 #include "simECGL/simECGL.h"
 #include <time.h>
@@ -89,6 +90,36 @@ int simECGL_main()
 
     strokeLine(ctx, 80, 50, 130, 150);
     write_display_memory_on();
+
+    Iterator_ptr itor = newShaderInfoIterator(ctx);
+    int curY;
+    ShaderContainer_ptr scon = nullptr;
+    while (!shaderInfoIterateEnd(itor))
+    {
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderInfo(itor);
+        printf("Y:%d\n", curY);
+        if (scon != nullptr)
+        {
+            switch (scon->TYPE)
+            {
+            case SPOINT_RGB888:
+            {
+                printf("SPOINT_RGB888\n");
+            }
+            case SPOINT_RGBA32:
+            {
+                printf("SPOINT_RGBA32\n");
+            }
+            break;
+            case SLINE:
+            {
+                printf("SLINE\n");
+            }
+            break;
+            }
+        }
+    }
 
     return 0;
 }

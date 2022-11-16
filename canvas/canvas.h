@@ -44,7 +44,6 @@ struct CanvaHandle
     int beginPenx;
     int beginPeny;
 
-    // Used for XET structure
     size_t scanLineMin;
     size_t scanLineMax;
 

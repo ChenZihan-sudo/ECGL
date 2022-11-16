@@ -182,8 +182,8 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         bx = x;
         by = y;
     }
-    
-    writeSLine(hdl->shaderInfo, ax, ay, bx, by, false);
+
+    writeSLine(hdl->shaderInfo, ax, ay, bx, by, true);
 
     hdl->penx = x;
     hdl->peny = y;
@@ -555,10 +555,8 @@ void stroke(CanvaHandle_ptr hdl)
     {
         curY = currentShaderInfoItorY(itor);
         scon = nextShaderInfo(itor);
-        printf("Y: %d\n", curY);
         if (scon != nullptr)
         {
-            printf("TYPE %d\n", scon->TYPE);
             switch (scon->TYPE)
             {
             case SPOINT_RGB888:
@@ -572,7 +570,6 @@ void stroke(CanvaHandle_ptr hdl)
             break;
             case SLINE:
             {
-
                 sLine_ptr sli = (sLine_ptr)scon->data;
 
                 if (sli->antialiasing)
