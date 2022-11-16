@@ -133,6 +133,17 @@ ShaderContainer_ptr newSPointRGB888(int x)
     return newShaderContainer(x, SPOINT_RGB888, nullptr, priority);
 }
 
+//* Line
+ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
+{
+    sLine_ptr pt = nullptr;
+    pt = (sLine_ptr)malloc(sizeof(sLine_t));
+    pt->x1 = x1;
+    pt->y1 = y1;
+    pt->antialiasing = antialiasing;
+    return newShaderContainer(x0, SLINE, (void *)pt, priority);
+}
+
 bool shaderArrInsert(Array_ptr a, SPriorityCon_ptr spcon)
 {
     if (a != nullptr)
@@ -261,7 +272,7 @@ void writeSPointA(CanvaHandle_ptr hd, int x, int y, uint8_t alpha, bool keyPoint
 
     // Sync save priority data into array
     if (shaderArr[y] == nullptr)
-        shaderArr[y] = newArray(1);
+        shaderArr[y] = newArray(1);  
 
     int posi = shaderArrSearch(shaderArr[y], x);
     if (posi != -1)

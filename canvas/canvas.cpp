@@ -184,9 +184,9 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         ay = hdl->peny;
         bx = x;
         by = y;
-    }
+    } 
 
-        // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
+    // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
     //     hdl->pathInfo[(size_t)ay], (void *)scon, compareET_lineTo);
 
     hdl->penx = x;
