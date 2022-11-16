@@ -26,13 +26,6 @@
 #define bool short
 #endif
 
-int __abs(int val)
-{
-    if (val < 0)
-        val = -val;
-    return val;
-};
-
 // * Canvas Functions
 
 /// @brief Set Begin Point if necessary
@@ -87,20 +80,9 @@ CanvaHandle_ptr releaseCanva(CanvaHandle_ptr canva)
 // HINT: Not a API Function. This function called by lineTo() only.
 bool compareET_lineTo(void *data1, void *data2)
 {
-    ShaderContainer_ptr scon1 = (ShaderContainer_ptr)data1;
-    ShaderContainer_ptr scon2 = (ShaderContainer_ptr)data2;
-    if (scon1->TYPE == SLINE && scon2->TYPE == SLINE)
-    {
-        sLine_ptr sl1 = (sLine_ptr)scon1->data;
-        sLine_ptr sl2 = (sLine_ptr)scon2->data;
-        return sl1->y1 < sl2->y1;
-    }
-
-    return false;
-
-    // XET_ptr xetptr1 = (XET_ptr)data1;
-    // XET_ptr xetptr2 = (XET_ptr)data2;
-    // return xetptr1->by < xetptr2->by;
+    XET_ptr xetptr1 = (XET_ptr)data1;
+    XET_ptr xetptr2 = (XET_ptr)data2;
+    return xetptr1->by < xetptr2->by;
 }
 
 // HINT: Not a API Function. This function called by lineTo() only.
@@ -204,9 +186,7 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
         by = y;
     }
 
-    
-
-    // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
+        // hdl->pathInfo[(size_t)ay] = sortNewLinkListNode(
     //     hdl->pathInfo[(size_t)ay], (void *)scon, compareET_lineTo);
 
     hdl->penx = x;
@@ -590,16 +570,6 @@ void stroke(CanvaHandle_ptr hdl)
             {
                 sPointRGBA32_ptr sp32 = (sPointRGBA32_ptr)scon->data;
                 IDM_writeAlphaBlendColor(scon->x, curY, rgb888, sp32->alpha);
-            }
-            break;
-            case SLINE:
-            {
-                sLine_ptr sli = (sLine_ptr)scon->data;
-
-                if (sli->antialiasing)
-                    strokeLineAA(hdl, scon->x, curY, sli->x1, sli->y1);
-                else
-                    strokeLine(hdl, scon->x, curY, sli->x1, sli->y1);
             }
             break;
             }

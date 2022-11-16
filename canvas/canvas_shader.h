@@ -72,15 +72,4 @@ ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha, PRIORIT
 //* Point RGB888
 ShaderContainer_ptr newSPointRGB888(int x, PRIORITY_id priority);
 
-// //* Line
-// typedef struct sLine sLine_t;
-// typedef struct sLine *sLine_ptr;
-// struct sLine
-// {
-//     int x1;
-//     int y1;
-//     bool antialiasing;
-// };
-// ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority);
-
 #endif

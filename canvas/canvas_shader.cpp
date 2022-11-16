@@ -9,7 +9,7 @@
 
 // * Iterators
 
-// * PathInfo Iterator Structure
+// HINT: PathInfo Iterator Structure
 // void *data1; -> store the CanvaHandle_ptr data
 // void *data2; -> current shaderInfo data pointer, store the LinkList_ptr data
 // int val1; -> store the current line posi y
@@ -89,7 +89,7 @@ bool shaderInfoIterateEnd(Iterator_ptr itor)
     return false;
 }
 
-// HINT 可优化的: 去除存储y的值
+//* priority and it's container
 
 static PRIORITY_id priority = 0;
 
@@ -98,6 +98,7 @@ SPriorityCon_ptr newSPriorityCon(int x, PRIORITY_id id)
     SPriorityCon_ptr spcon = (SPriorityCon_ptr)malloc(sizeof(SPriorityCon_t));
     spcon->x = x;
     spcon->id = id;
+    return spcon;
 };
 
 //* Shader Container
@@ -130,24 +131,6 @@ ShaderContainer_ptr newSPointRGBA32(int x, bool keyPoint, uint8_t alpha, PRIORIT
 ShaderContainer_ptr newSPointRGB888(int x)
 {
     return newShaderContainer(x, SPOINT_RGB888, nullptr, priority);
-}
-
-// //* Line
-// ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, PRIORITY_id priority)
-// {
-//     sLine_ptr pt = nullptr;
-//     pt = (sLine_ptr)malloc(sizeof(sLine_t));
-//     pt->x1 = x1;
-//     pt->y1 = y1;
-//     pt->antialiasing = antialiasing;
-//     return newShaderContainer(x0, SLINE, (void *)pt, priority);
-// }
-
-bool shaderPointCompare(void *data1, void *data2)
-{
-    ShaderContainer_ptr scon1 = (ShaderContainer_ptr)data1;
-    ShaderContainer_ptr scon2 = (ShaderContainer_ptr)data2;
-    return scon1->x < scon2->x;
 }
 
 bool shaderArrInsert(Array_ptr a, SPriorityCon_ptr spcon)
@@ -233,6 +216,13 @@ int shaderArrSearch(Array_ptr a, int x)
     }
 
     return -1;
+}
+
+bool shaderPointCompare(void *data1, void *data2)
+{
+    ShaderContainer_ptr scon1 = (ShaderContainer_ptr)data1;
+    ShaderContainer_ptr scon2 = (ShaderContainer_ptr)data2;
+    return scon1->x < scon2->x;
 }
 
 void writeSPoint(CanvaHandle_ptr hd, int x, int y)
