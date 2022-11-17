@@ -1,7 +1,7 @@
 #ifndef CANVAS_EXT_CPP
 #define CANVAS_EXT_CPP
 
-//extern "C"
+// extern "C"
 //{
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,22 +9,14 @@
 #include <math.h>
 
 #include "../display/display_config.h"
+#include "canvas_shader.h"
 #include "canvas.h"
 #include "canvas_ext.h"
 //}
 
 // TODO 存在问题，见MDN标准Canvas: roundRect()
 
-/// @brief
-/// @param phd
-/// @param x
-/// @param y
-/// @param width
-/// @param height
-/// @param radiiCount
-/// @param radii
-/// @return canvas_err_t
-canvas_err_t roundRect(CanvaHandle_ptr phd, int x, int y, int width, int height, int radiiCount, int *radii)
+canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, int radiiCount, int *radii)
 {
     // all-corners
     // [top-left-and-bottom-right, top-right-and-bottom-left]
@@ -73,6 +65,10 @@ canvas_err_t roundRect(CanvaHandle_ptr phd, int x, int y, int width, int height,
         break;
     }
 
+    // ! Do test.
+    scanLineRangeUpdate(hd, y);
+
+    // ! Uncertain border radius
     // Priority 1>2>3>4
     int maxLimit = width > height ? height : width;
     topLeft = maxLimit < topLeft ? maxLimit : topLeft;
@@ -86,15 +82,34 @@ canvas_err_t roundRect(CanvaHandle_ptr phd, int x, int y, int width, int height,
 
     printf("=>%d %d %d %d\n", topLeft, topRight, bottomRight, bottomLeft);
 
-    strokeLine(phd, x + topLeft, y, x + width - topRight, y);
-    strokeLine(phd, x + bottomLeft, y + height, x + width - bottomRight, y + height);
-    strokeLine(phd, x, y + topLeft, x, y + height - bottomLeft);
-    strokeLine(phd, x + width, y + topRight, x + width, y + height - bottomRight);
+    writeSRoundRect(hd->shaderInfo, x, y, width, height,
+                    topLeft, topRight, bottomRight, bottomLeft, hd->antialiasing);
 
-    arc(phd, x + topLeft, y + topLeft, topLeft, 1.f * PI, 1.5f * PI, false);
-    arc(phd, x + width - topRight, y + topRight, topRight, 1.5f * PI, 2.f * PI, false);
-    arc(phd, x + bottomLeft, y + height - bottomLeft, bottomLeft, 0.5f * PI, 1.001f * PI, false);
-    arc(phd, x + width - bottomRight, y + height - bottomRight, bottomRight, 0.0f * PI, 0.5f * PI, false);
+    movePen(hd, x, y);
+}
+
+/// @brief
+/// @param hd
+/// @param x
+/// @param y
+/// @param width
+/// @param height
+/// @param radiiCount
+/// @param radii
+/// @return canvas_err_t
+canvas_err_t roundRectInstance(CanvaHandle_ptr hd, int x, int y,
+                               int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft)
+{
+
+    strokeLine(hd, x + topLeft, y, x + width - topRight, y);
+    strokeLine(hd, x + bottomLeft, y + height, x + width - bottomRight, y + height);
+    strokeLine(hd, x, y + topLeft, x, y + height - bottomLeft);
+    strokeLine(hd, x + width, y + topRight, x + width, y + height - bottomRight);
+
+    arcInstance(hd, x + topLeft, y + topLeft, topLeft, 1.f * PI, 1.5f * PI, false);
+    arcInstance(hd, x + width - topRight, y + topRight, topRight, 1.5f * PI, 2.f * PI, false);
+    arcInstance(hd, x + bottomLeft, y + height - bottomLeft, bottomLeft, 0.5f * PI, 1.001f * PI, false);
+    arcInstance(hd, x + width - bottomRight, y + height - bottomRight, bottomRight, 0.0f * PI, 0.5f * PI, false);
 
     return CANVAS_OK;
 };

@@ -23,7 +23,8 @@ enum ShaderContainer_enum
     SLINE = 0x02,
 
     // Need resolve to points when fill
-    SARC = 0x03
+    SARC = 0x03,
+    SROUNDRECT = 0x04,
 };
 
 //* Iterator
@@ -84,6 +85,22 @@ struct sArc
 };
 ShaderContainer_ptr newSArc(int x, int radius, float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
 
+//* RoundRect
+typedef struct sRoundRect sRoundRect_t;
+typedef struct sRoundRect *sRoundRect_ptr;
+struct sRoundRect
+{
+    int width;
+    int height;
+    int topLeft;
+    int topRight;
+    int bottomLeft;
+    int bottomRight;
+    bool antialiasing;
+};
+ShaderContainer_ptr newSRoundRect(int x, int width, int height,
+                                  int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing);
+
 //* Write to shader buffer API
 bool shaderPointCompare(void *data1, void *data2);
 void writeSPoint(LinkList_ptr *shaderInfo, int x, int y);
@@ -91,5 +108,7 @@ void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool k
 void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing);
 void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius,
                float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
+void writeSRoundRect(LinkList_ptr *shaderInfo, int x, int y, int width, int height,
+                     int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing);
 
 #endif

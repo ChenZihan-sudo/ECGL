@@ -48,6 +48,22 @@ void movePen(CanvaHandle_ptr hdl, int penx, int peny)
     hdl->peny = peny;
 }
 
+bool scanLineRangeUpdate(CanvaHandle_ptr hdl, int y)
+{
+    if (y < hdl->scanLineMin)
+    {
+        hdl->scanLineMin = y;
+        return true;
+    }
+    else if (y > hdl->scanLineMax)
+    {
+        hdl->scanLineMax = y;
+        return true;
+    }
+
+    return false;
+}
+
 // * Point
 Point_ptr newPoint(Point_ptr pt, int x, int y)
 {
@@ -164,10 +180,15 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
     int ax, ay, bx, by;
+
+    //! Do test.
+    scanLineRangeUpdate(hdl, y);
+    scanLineRangeUpdate(hdl, hdl->peny);
+
     if (hdl->peny > y)
     {
-        hdl->scanLineMin = y < hdl->scanLineMin ? y : hdl->scanLineMin;
-        hdl->scanLineMax = hdl->peny > hdl->scanLineMax ? hdl->peny : hdl->scanLineMax;
+        // hdl->scanLineMin = y < hdl->scanLineMin ? y : hdl->scanLineMin;
+        // hdl->scanLineMax = hdl->peny > hdl->scanLineMax ? hdl->peny : hdl->scanLineMax;
         ax = x;
         ay = y;
         bx = hdl->penx;
@@ -175,8 +196,8 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y)
     }
     else
     {
-        hdl->scanLineMin = hdl->peny < hdl->scanLineMin ? hdl->peny : hdl->scanLineMin;
-        hdl->scanLineMax = y > hdl->scanLineMax ? y : hdl->scanLineMax;
+        // hdl->scanLineMin = hdl->peny < hdl->scanLineMin ? hdl->peny : hdl->scanLineMin;
+        // hdl->scanLineMax = y > hdl->scanLineMax ? y : hdl->scanLineMax;
         ax = hdl->penx;
         ay = hdl->peny;
         bx = x;
@@ -576,6 +597,28 @@ void stroke(CanvaHandle_ptr hdl)
                     strokeLineAA(hdl, scon->x, curY, sli->x1, sli->y1);
                 else
                     strokeLine(hdl, scon->x, curY, sli->x1, sli->y1);
+            }
+            break;
+            case SARC:
+            {
+                sArc_ptr sarc = (sArc_ptr)scon->data;
+
+                // if (sarc->antialiasing)
+                // else
+
+                arcInstance(hdl, scon->x, curY, sarc->radius,
+                            sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
+            }
+            break;
+            case SROUNDRECT:
+            {
+                sRoundRect_ptr srrect = (sRoundRect_ptr)scon->data;
+
+                // if (srrect->antialiasing)
+                // else
+
+                roundRectInstance(hdl, scon->x, curY, srrect->width, srrect->height,
+                                  srrect->topLeft, srrect->topRight, srrect->bottomRight, srrect->bottomLeft);
             }
             break;
             }
@@ -1053,6 +1096,9 @@ void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float 
     float endDrawPointY = ((float)radius * sin(endAngle));
 
     writeSArc(hdl->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hdl->antialiasing);
+
+    // ! Do test.
+    scanLineRangeUpdate(hdl, y);
 
     // ! Do test here.
     // * Set Begin Point if it's the first call after beginPath()

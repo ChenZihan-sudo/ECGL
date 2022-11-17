@@ -148,6 +148,22 @@ ShaderContainer_ptr newSArc(int x, int radius, float startAngle,
     return newShaderContainer(x, SARC, (void *)pt);
 }
 
+//* RoundRect
+ShaderContainer_ptr newSRoundRect(int x, int width, int height,
+                                  int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing)
+{
+    sRoundRect_ptr pt = nullptr;
+    pt = (sRoundRect_ptr)malloc(sizeof(sRoundRect_t));
+    pt->width = width;
+    pt->height = height;
+    pt->topLeft = topLeft;
+    pt->topRight = topRight;
+    pt->bottomLeft = bottomLeft;
+    pt->bottomRight = bottomRight;
+    pt->antialiasing = antialiasing;
+    return newShaderContainer(x, SROUNDRECT, (void *)pt);
+}
+
 //* Write to shader buffer API
 
 bool shaderPointCompare(void *data1, void *data2)
@@ -181,5 +197,12 @@ void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius, float startAn
                float endAngle, bool anticlockwise, bool antialiasing)
 {
     ShaderContainer_ptr scon = newSArc(x, radius, startAngle, endAngle, anticlockwise, antialiasing);
+    shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
+}
+
+void writeSRoundRect(LinkList_ptr *shaderInfo, int x, int y, int width, int height,
+                     int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing)
+{
+    ShaderContainer_ptr scon = newSRoundRect(x, width, height, topLeft, topRight, bottomRight, bottomLeft, antialiasing);
     shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }

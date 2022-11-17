@@ -58,12 +58,8 @@ int simECGL_main()
     lineTo(ctx, 300, 100);
     lineTo(ctx, 250, 100);
     lineTo(ctx, 250, 50);
-
-    ctx->rgb888 = 0x00FF00;
-    // fill(ctx);
+    arc(ctx, 100, 200, 30, 0.f * PI, 1.5f * PI, false);
     ctx->rgb888 = 0xFF0000;
-    stroke(ctx);
-    floodFill(BOUNDARY_COLOR, 251, 51, 0xFF0000, 0x00FF00);
 
     // ctx->rgb888 = 0x00FF00;
     // stroke(ctx);
@@ -80,11 +76,14 @@ int simECGL_main()
     // fill(ctx);
     // write_display_memory_on();
 
-    // ctx->rgb888 = 0xFFFFFF;
-    // int radii[4] = { 0, 10, 10, 10 };
-    // roundRect(ctx, 150, 50, 30, 30, 4, radii);
-    // write_display_memory_on();
+    ctx->rgb888 = 0xFFFFFF;
+    int radii[4] = {0, 10, 10, 10};
+    roundRect(ctx, 150, 350, 30, 30, 4, radii);
+    stroke(ctx);
+    write_display_memory_on();
+    floodFill(OLD_SEED_POINT_COLOR, 255, 55, 0x000000, 0x00FF00);
 
+    ctx->rgb888 = 0xFF00FF;
     strokeLineAA(ctx, 50, 50, 100, 150);
     write_display_memory_on();
 
@@ -115,6 +114,16 @@ int simECGL_main()
             case SLINE:
             {
                 printf("SLINE\n");
+            }
+            break;
+            case SARC:
+            {
+                printf("SARC\n");
+            }
+            break;
+            case SROUNDRECT:
+            {
+                printf("SROUNDRECT\n");
             }
             break;
             }

@@ -58,6 +58,10 @@ struct CanvaHandle
 CanvaHandle_ptr newCanva(CanvaHandle_ptr canva);
 CanvaHandle_ptr releaseCanva(CanvaHandle_ptr canva);
 
+bool setBeginPoint(CanvaHandle_ptr hdl, int beginPenx, int beginPeny);
+void movePen(CanvaHandle_ptr hdl, int penx, int peny);
+bool scanLineRangeUpdate(CanvaHandle_ptr hdl, int y);
+
 //* Point
 typedef struct Point Point_t;
 typedef struct Point *Point_ptr;
