@@ -30,34 +30,37 @@
 
 /// @brief Set Begin Point if it's the first call after beginPath()
 /// @return True if set success
-bool setBeginPoint(CanvaHandle_ptr hdl, int beginPenx, int beginPeny)
+bool setBeginPoint(CanvaHandle_ptr hd, int beginPenx, int beginPeny)
 {
-    if (!hdl->apiCalled)
+    if (!hd->apiCalled)
     {
-        hdl->beginPenx = beginPenx;
-        hdl->beginPeny = beginPeny;
-        hdl->apiCalled = true;
+        hd->beginPenx = beginPenx;
+        hd->beginPeny = beginPeny;
+        hd->apiCalled = true;
         return true;
     }
     return false;
 };
 
-void movePen(CanvaHandle_ptr hdl, int penx, int peny)
+void movePen(CanvaHandle_ptr hd, int penx, int peny)
 {
-    hdl->penx = penx;
-    hdl->peny = peny;
+    hd->penx = penx;
+    hd->peny = peny;
 }
 
-bool scanLineRangeUpdate(CanvaHandle_ptr hdl, int y)
+//! BUG: 在被line调用时 可以进行优化
+bool scanLineRangeUpdate(CanvaHandle_ptr hd, int y)
 {
-    if (y < hdl->scanLineMin)
+    if (y < hd->scanLineMin)
     {
-        hdl->scanLineMin = y;
+        hd->scanLineMin = y;
+        printf("[D] scanLineMin be set to %d\n", hd->scanLineMin);
         return true;
     }
-    else if (y > hdl->scanLineMax)
+    else if (y > hd->scanLineMax)
     {
-        hdl->scanLineMax = y;
+        hd->scanLineMax = y;
+        printf("[D] scanLineMax be set to %d\n", hd->scanLineMax);
         return true;
     }
 
@@ -143,22 +146,22 @@ bool outAreaBoundTruncated(int *px, int *py)
 };
 
 // TODO: 写警告或错误返回
-void beginPath(CanvaHandle_ptr hdl)
+void beginPath(CanvaHandle_ptr hd)
 {
-    if (hdl != nullptr)
+    if (hd != nullptr)
     {
-        hdl->shaderInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
-        hdl->lineWidth = 1;
-        hdl->lineBrushType = CANVAS_DEFAULT_BRUSH;
-        hdl->rgb888 = 0x000000;
-        hdl->penx = 0;
-        hdl->peny = 0;
-        hdl->apiCalled = false;
-        hdl->antialiasing = true;
-        hdl->beginPenx = 0;
-        hdl->beginPeny = 0;
-        hdl->scanLineMin = DISPLAY_HEIGHT - 1;
-        hdl->scanLineMax = 0;
+        hd->shaderInfo = (LinkList_ptr *)calloc(DISPLAY_HEIGHT, sizeof(LinkList_ptr));
+        hd->lineWidth = 1;
+        hd->lineBrushType = CANVAS_DEFAULT_BRUSH;
+        hd->rgb888 = 0x000000;
+        hd->penx = 0;
+        hd->peny = 0;
+        hd->apiCalled = false;
+        hd->antialiasing = true;
+        hd->beginPenx = 0;
+        hd->beginPeny = 0;
+        hd->scanLineMin = DISPLAY_HEIGHT - 1;
+        hd->scanLineMax = 0;
     }
     else
     {
@@ -166,48 +169,48 @@ void beginPath(CanvaHandle_ptr hdl)
     }
 };
 
-void moveTo(CanvaHandle_ptr hdl, int x, int y)
+void moveTo(CanvaHandle_ptr hd, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
-    hdl->penx = x;
-    hdl->peny = y;
-    hdl->beginPenx = x;
-    hdl->beginPeny = y;
-    hdl->apiCalled = true;
+    hd->penx = x;
+    hd->peny = y;
+    hd->beginPenx = x;
+    hd->beginPeny = y;
+    hd->apiCalled = true;
 };
 
-void lineTo(CanvaHandle_ptr hdl, int x, int y)
+void lineTo(CanvaHandle_ptr hd, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
     int ax, ay, bx, by;
 
     //! Do test.
-    scanLineRangeUpdate(hdl, y);
-    scanLineRangeUpdate(hdl, hdl->peny);
+    scanLineRangeUpdate(hd, y);
+    scanLineRangeUpdate(hd, hd->peny);
 
-    if (hdl->peny > y)
+    if (hd->peny > y)
     {
-        // hdl->scanLineMin = y < hdl->scanLineMin ? y : hdl->scanLineMin;
-        // hdl->scanLineMax = hdl->peny > hdl->scanLineMax ? hdl->peny : hdl->scanLineMax;
+        // hd->scanLineMin = y < hd->scanLineMin ? y : hd->scanLineMin;
+        // hd->scanLineMax = hd->peny > hd->scanLineMax ? hd->peny : hd->scanLineMax;
         ax = x;
         ay = y;
-        bx = hdl->penx;
-        by = hdl->peny;
+        bx = hd->penx;
+        by = hd->peny;
     }
     else
     {
-        // hdl->scanLineMin = hdl->peny < hdl->scanLineMin ? hdl->peny : hdl->scanLineMin;
-        // hdl->scanLineMax = y > hdl->scanLineMax ? y : hdl->scanLineMax;
-        ax = hdl->penx;
-        ay = hdl->peny;
+        // hd->scanLineMin = hd->peny < hd->scanLineMin ? hd->peny : hd->scanLineMin;
+        // hd->scanLineMax = y > hd->scanLineMax ? y : hd->scanLineMax;
+        ax = hd->penx;
+        ay = hd->peny;
         bx = x;
         by = y;
     }
 
-    writeSLine(hdl->shaderInfo, ax, ay, bx, by, hdl->antialiasing);
+    writeSLine(hd->shaderInfo, ax, ay, bx, by, hd->antialiasing);
 
-    hdl->penx = x;
-    hdl->peny = y;
+    hd->penx = x;
+    hd->peny = y;
 };
 
 // HINT: Not a API Function.
@@ -351,7 +354,7 @@ void tranbackStrokeLinePosi(int id, int *x, int *y)
 // HINT: 反走样参考 Reference about antialiasing: 孙家广．计算机图形学［M］．北京：清华大学出版社 1998．
 // 可优化 使用WU反走样算法 or by https://scholar.google.com/scholar?q=%E4%B8%80%E7%A7%8D%E5%9F%BA%E4%BA%8E%E5%8A%A0%E6%9D%83%E5%8C%BA%E5%9F%9F%E9%87%87%E6%A0%B7%E7%9A%84%E7%9B%B4%E7%BA%BF%E5%8F%8D%E8%B5%B0%E6%A0%B7%E7%94%9F%E6%88%90%E7%AE%97%E6%B3%95
 // Stroke line with anti-aliasing. (Use gupta sproull algorithm)
-void strokeLineAA(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
+void strokeLineAA(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
 {
     int dx = x1 - x0, dy = y1 - y0;
     if ((dy <= 0 && dx >= 0) || (dy <= 0 && dx <= 0))
@@ -372,7 +375,7 @@ void strokeLineAA(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
     int id = arcEncode[parts8EncodeTool((float)dx, (float)dy)];
     tranStrokeLinePosi(id, &ex, &ey);
 
-    RGB888 rgb888 = hdl->rgb888;
+    RGB888 rgb888 = hd->rgb888;
 
     int a = 0 - ey;
     int b = ex;
@@ -435,7 +438,7 @@ void strokeLineAA(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
     // IDM_writeAlphaBlendColor(x1, y1, 0x00FF00, 0xFF);
 }
 
-void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
+void strokeLine(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
 {
     // Use Bresenham Algorithm
     int dx = x1 - x0, dy = y1 - y0;
@@ -470,7 +473,7 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
     else
         totalCount = dy;
 
-    uint16_t color = RGB888_to_RGB565(hdl->rgb888);
+    uint16_t color = RGB888_to_RGB565(hd->rgb888);
     uint8_t colorH8b = (color >> 8) & 0xFF;
     uint8_t colorL8b = color & 0xFF;
 
@@ -478,13 +481,13 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
 
     for (i = 0; i <= totalCount; i++)
     {
-        if (hdl->lineWidth > 1)
+        if (hd->lineWidth > 1)
         {
-            switch (hdl->lineBrushType)
+            switch (hd->lineBrushType)
             {
             case 1:
             {
-                int mid = hdl->lineWidth / 2;
+                int mid = hd->lineWidth / 2;
                 if (!brush1kCck)
                 {
                     for (int i = 0; i < mid; i++)
@@ -506,7 +509,7 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
             break;
             case 2:
             {
-                int mid = hdl->lineWidth / 2;
+                int mid = hd->lineWidth / 2;
                 for (int i = -mid; i < mid + 1; i++)
                 {
                     for (int j = -mid; j < mid + 1; j++)
@@ -563,13 +566,13 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1)
     // IDM_writeColor(x1, y1, _colorH8b, _colorL8b);
 }
 
-void stroke(CanvaHandle_ptr hdl)
+void stroke(CanvaHandle_ptr hd)
 {
-    RGB888 rgb888 = hdl->rgb888;
+    RGB888 rgb888 = hd->rgb888;
     uint8_t colorH8b = (rgb888 >> 8) & 0xFF;
     uint8_t colorL8b = rgb888 & 0xFF;
 
-    Iterator_ptr itor = newShaderInfoIterator(hdl);
+    Iterator_ptr itor = newShaderInfoIterator(hd);
     int curY;
     ShaderContainer_ptr scon = nullptr;
     while (!shaderInfoIterateEnd(itor))
@@ -594,9 +597,9 @@ void stroke(CanvaHandle_ptr hdl)
                 sLine_ptr sli = (sLine_ptr)scon->data;
 
                 if (sli->antialiasing)
-                    strokeLineAA(hdl, scon->x, curY, sli->x1, sli->y1);
+                    strokeLineAA(hd, scon->x, curY, sli->x1, sli->y1);
                 else
-                    strokeLine(hdl, scon->x, curY, sli->x1, sli->y1);
+                    strokeLine(hd, scon->x, curY, sli->x1, sli->y1);
             }
             break;
             case SARC:
@@ -606,7 +609,7 @@ void stroke(CanvaHandle_ptr hdl)
                 // if (sarc->antialiasing)
                 // else
 
-                arcInstance(hdl, scon->x, curY, sarc->radius,
+                arcInstance(hd, scon->x, curY, sarc->radius,
                             sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
             }
             break;
@@ -617,7 +620,7 @@ void stroke(CanvaHandle_ptr hdl)
                 // if (srrect->antialiasing)
                 // else
 
-                roundRectInstance(hdl, scon->x, curY, srrect->width, srrect->height,
+                roundRectInstance(hd, scon->x, curY, srrect->width, srrect->height,
                                   srrect->topLeft, srrect->topRight, srrect->bottomRight, srrect->bottomLeft);
             }
             break;
@@ -776,17 +779,67 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
     st = releaseStack(st);
 };
 
-void fill(CanvaHandle_ptr hdl){
+void fill(CanvaHandle_ptr hd)
+{
+    // Prepare iterator
+    int curY;
+    Iterator_ptr itor = newShaderInfoIterator(hd);
+    ShaderContainer_ptr scon = nullptr;
+
+    // Resolve some graphic to point
+    while (!shaderInfoIterateEnd(itor))
+    {
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderInfo(itor);
+    }
+    releaser(itor);
+
+    // Use Scanline Fill Algorithm
+    LinkList_ptr AET = NULL;
+    itor = newShaderInfoIterator(hd);
+    while (!shaderInfoIterateEnd(itor))
+    {
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderInfo(itor);
+        // Generate node
+        FillNode_ptr fn = nullptr;
+        switch (scon->TYPE)
+        {
+        case SPOINT_RGBA32:
+        {
+            sPointRGBA32_ptr sp = (sPointRGBA32_ptr)scon->data;
+            if (sp->keyPoint)
+                fn = newFillNode_point(scon->x, curY);
+        }
+        break;
+        case SPOINT_RGB888:
+        {
+            fn = newFillNode_point(scon->x, curY);
+        }
+        break;
+        case SLINE:
+        {
+            sLine_ptr sli = (sLine_ptr)scon->data;
+            float tm = ((float)sli->x1 - (float)scon->x) / ((float)sli->y1 - (float)curY);
+            fn = newFillNode_line((float)scon->x, (float)curY, (float)sli->x1, tm);
+        }
+        break;
+        }
+        if (fn != nullptr)
+            AET = newLinkListNode(AET, (void *)fn);
+    }
+    releaser(itor);
+
     // // Use Scanline Fill Algorithm
     // LinkList_ptr AET = NULL;
 
-    // size_t i, end = hdl->scanLineMax;
-    // for (i = hdl->scanLineMin; i <= end; i++)
+    // size_t i, end = hd->scanLineMax;
+    // for (i = hd->scanLineMin; i <= end; i++)
     // {
     //     // Add the node to AET
-    //     if (hdl->pathInfo[i] != NULL)
+    //     if (hd->shaderInfo[i] != NULL)
     //     {
-    //         LinkList_ptr xet = hdl->pathInfo[i];
+    //         LinkList_ptr xet = hd->shaderInfo[i];
     //         for (;;)
     //         {
     //             XET_ptr xetData = (XET_ptr)xet->data;
@@ -841,7 +894,7 @@ void fill(CanvaHandle_ptr hdl){
     //     {
     //         // Draw the pixel
     //         LinkList_ptr aetNode = AET;
-    //         uint16_t color = RGB888_to_RGB565(hdl->rgb888);
+    //         uint16_t color = RGB888_to_RGB565(hd->rgb888);
     //         uint8_t colorH8b = (color >> 8) & 0xFF;
     //         uint8_t colorL8b = color & 0xFF;
 
@@ -879,10 +932,10 @@ void fill(CanvaHandle_ptr hdl){
     // }
 };
 
-void drawCircle(CanvaHandle_ptr hdl, int x, int y, int radius)
+void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 {
     // Color
-    uint16_t color = RGB888_to_RGB565(hdl->rgb888);
+    uint16_t color = RGB888_to_RGB565(hd->rgb888);
     uint8_t colorH8b = (color >> 8) & 0xFF;
     uint8_t colorL8b = color & 0xFF;
 
@@ -980,7 +1033,7 @@ bool arcDrawBorderChecker(int arcId, int drawX, int drawY, int drawPointX, int d
     return false;
 }
 
-void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
+void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
 {
     //* We cut the whole circle into 8 parts. And encode this parts by function parts8EncodeTool().
     //* We store this parts code into array arcs which is the parts we need to draw.
@@ -990,7 +1043,7 @@ void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle
     // Judge to draw the circle or arc.
     if (flGREATE(fabs(startAngle - endAngle), 2.f * PI))
     {
-        drawCircle(hdl, x, y, radius);
+        drawCircle(hd, x, y, radius);
         return;
     }
 
@@ -1039,7 +1092,7 @@ void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle
     }
 
     // Color
-    uint16_t color = RGB888_to_RGB565(hdl->rgb888);
+    uint16_t color = RGB888_to_RGB565(hd->rgb888);
     uint8_t colorH8b = (color >> 8) & 0xFF;
     uint8_t colorL8b = color & 0xFF;
 
@@ -1086,7 +1139,7 @@ void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle
     IDM_writeColor(x, y, colorH8b, colorL8b);
 }
 
-void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
+void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
 {
     // HINT this can be optimised if necessary.
     float startDrawPointX = ((float)radius * cos(startAngle));
@@ -1095,41 +1148,41 @@ void arc(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float 
     float endDrawPointX = ((float)radius * cos(endAngle));
     float endDrawPointY = ((float)radius * sin(endAngle));
 
-    writeSArc(hdl->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hdl->antialiasing);
+    writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hd->antialiasing);
 
     // ! Do test.
-    scanLineRangeUpdate(hdl, y);
+    scanLineRangeUpdate(hd, y);
 
     // ! Do test here.
     // * Set Begin Point if it's the first call after beginPath()
     if (anticlockwise)
-        setBeginPoint(hdl, x + startDrawPointX, y + startDrawPointY);
+        setBeginPoint(hd, x + startDrawPointX, y + startDrawPointY);
     else
-        setBeginPoint(hdl, x + endDrawPointX, y + endDrawPointY);
+        setBeginPoint(hd, x + endDrawPointX, y + endDrawPointY);
 
     // * Move the pen to the end point
     if (anticlockwise)
-        movePen(hdl, x + startDrawPointX, y + startDrawPointY);
+        movePen(hd, x + startDrawPointX, y + startDrawPointY);
     else
-        movePen(hdl, x + endDrawPointX, y + endDrawPointY);
+        movePen(hd, x + endDrawPointX, y + endDrawPointY);
 }
 
-void closePath(CanvaHandle_ptr hdl)
+void closePath(CanvaHandle_ptr hd)
 {
-    if (!(hdl->penx == hdl->beginPenx && hdl->peny == hdl->beginPeny))
+    if (!(hd->penx == hd->beginPenx && hd->peny == hd->beginPeny))
     {
-        printf("close: %d %d\n", hdl->beginPenx, hdl->beginPeny);
-        lineTo(hdl, hdl->beginPenx, hdl->beginPeny);
+        printf("close: %d %d\n", hd->beginPenx, hd->beginPeny);
+        lineTo(hd, hd->beginPenx, hd->beginPeny);
     }
 }
 
-void pathDestory(CanvaHandle_ptr hdl){
+void pathDestory(CanvaHandle_ptr hd){
     // for (int i = 0; i < 100; i++)
     // {
-    //     releaseLinkListNode(hdl->pathInfo[i]);
-    //     free(hdl->pathInfo[i]->data);
+    //     releaseLinkListNode(hd->pathInfo[i]);
+    //     free(hd->pathInfo[i]->data);
     // }
-    // free(hdl->pathInfo);
+    // free(hd->pathInfo);
 };
 
 void *releaser(void *pt)

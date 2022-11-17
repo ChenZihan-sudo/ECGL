@@ -51,43 +51,17 @@ int simECGL_main()
     CanvaHandle_ptr ctx = nullptr;
     ctx = newCanva(ctx);
     beginPath(ctx);
-    ctx->rgb888 = 0xFF0000;
 
-    moveTo(ctx, 250, 50);
-    lineTo(ctx, 300, 90);
-    lineTo(ctx, 300, 100);
-    lineTo(ctx, 250, 100);
-    lineTo(ctx, 250, 50);
-    arc(ctx, 100, 200, 30, 0.f * PI, 1.5f * PI, false);
-    ctx->rgb888 = 0xFF0000;
-
+    moveTo(ctx, 100, 100);
+    lineTo(ctx, 200, 200);
+    lineTo(ctx, 300, 200);
+    lineTo(ctx, 250, 150);
+    lineTo(ctx, 150, 300);
+    closePath(ctx);
     // ctx->rgb888 = 0x00FF00;
-    // stroke(ctx);
-
-    // moveTo(ctx, 150, 40);
-    // lineTo(ctx, 50, 80);
-    // lineTo(ctx, 100, 90);
-    // lineTo(ctx, 100, 100);
-    // lineTo(ctx, 150, 90);
-    // closePath(ctx);
-    // ctx->rgb888 = 0x00FF00;
-    // stroke(ctx);
-    // ctx->rgb888 = 0xFF0000;
     // fill(ctx);
-    // write_display_memory_on();
-
-    ctx->rgb888 = 0xFFFFFF;
-    int radii[4] = {0, 10, 10, 10};
-    roundRect(ctx, 150, 350, 30, 30, 4, radii);
+    ctx->rgb888 = 0xFF0000;
     stroke(ctx);
-    write_display_memory_on();
-    floodFill(OLD_SEED_POINT_COLOR, 255, 55, 0x000000, 0x00FF00);
-
-    ctx->rgb888 = 0xFF00FF;
-    strokeLineAA(ctx, 50, 50, 100, 150);
-    write_display_memory_on();
-
-    strokeLine(ctx, 80, 50, 130, 150);
     write_display_memory_on();
 
     Iterator_ptr itor = newShaderInfoIterator(ctx);
@@ -132,3 +106,49 @@ int simECGL_main()
 
     return 0;
 }
+
+// moveTo(ctx, 0, 0);
+// lineTo(ctx, 10, 10);
+// int radiiq = 10;
+// roundRect(ctx, 100, 100, 150, 100, 1, &radiiq);
+
+// lineTo(ctx, 100, 50);
+// lineTo(ctx, 50, 150);
+// stroke(ctx);
+
+// moveTo(ctx, 250, 50);
+// lineTo(ctx, 300, 90);
+// lineTo(ctx, 300, 100);
+// lineTo(ctx, 250, 100);
+// lineTo(ctx, 250, 50);
+// arc(ctx, 100, 200, 30, 0.f * PI, 1.5f * PI, false);
+// ctx->rgb888 = 0xFF0000;
+
+// ctx->rgb888 = 0x00FF00;
+// stroke(ctx);
+
+// moveTo(ctx, 150, 40);
+// lineTo(ctx, 50, 80);
+// lineTo(ctx, 100, 90);
+// lineTo(ctx, 100, 100);
+// lineTo(ctx, 150, 90);
+// closePath(ctx);
+// ctx->rgb888 = 0x00FF00;
+// stroke(ctx);
+// ctx->rgb888 = 0xFF0000;
+// fill(ctx);
+// write_display_memory_on();
+
+// ctx->rgb888 = 0xFFFFFF;
+// int radii[4] = {0, 10, 10, 10};
+// roundRect(ctx, 150, 350, 30, 30, 4, radii);
+// stroke(ctx);
+// write_display_memory_on();
+// floodFill(OLD_SEED_POINT_COLOR, 255, 55, 0x000000, 0x00FF00);
+
+// ctx->rgb888 = 0xFF00FF;
+// strokeLineAA(ctx, 50, 50, 100, 150);
+// write_display_memory_on();
+
+// strokeLine(ctx, 80, 50, 130, 150);
+// write_display_memory_on();
