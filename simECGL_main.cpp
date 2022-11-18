@@ -58,6 +58,9 @@ int simECGL_main()
     lineTo(ctx, 250, 150);
     lineTo(ctx, 150, 300);
     closePath(ctx);
+    moveTo(ctx, 0, 0);
+    arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
+
     // ctx->rgb888 = 0x00FF00;
     // fill(ctx);
     ctx->rgb888 = 0xFF0000;

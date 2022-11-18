@@ -5,6 +5,15 @@
 
 //* Shader system
 
+//* Shader status group
+enum shaderStatusGroup
+{
+    stSTROKE,
+    stFILL
+};
+extern uint8_t shaderStatus;
+extern LinkList_ptr *currentShaderInfo;
+
 typedef struct ShaderContainer ShaderContainer_t;
 typedef struct ShaderContainer *ShaderContainer_ptr;
 struct ShaderContainer
@@ -13,7 +22,7 @@ struct ShaderContainer
     int y;
     int TYPE;
     void *data;
-    
+
     // For FPOINT use
     bool filled;
 };

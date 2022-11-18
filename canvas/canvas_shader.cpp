@@ -7,6 +7,10 @@
 #include "canvas_shader.h"
 #include "canvas.h"
 
+// * Shader status group
+uint8_t shaderStatus = stSTROKE;
+LinkList_ptr *currentShaderInfo = nullptr;
+
 // * Iterators
 
 // HINT: PathInfo Iterator Structure

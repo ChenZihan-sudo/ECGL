@@ -42,6 +42,16 @@ bool setBeginPoint(CanvaHandle_ptr hd, int beginPenx, int beginPeny)
     return false;
 };
 
+bool connectLine(CanvaHandle_ptr hd, int penx, int peny)
+{
+    if (hd->apiCalled)
+    {
+        lineTo(hd, penx, peny);
+        return true;
+    }
+    return false;
+}
+
 void movePen(CanvaHandle_ptr hd, int penx, int peny)
 {
     hd->penx = penx;
@@ -782,6 +792,8 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
 void fill(CanvaHandle_ptr hd)
 {
     // Prepare iterator
+    shaderStatus = stFILL;
+    currentShaderInfo = hd->shaderInfo;
     int curY;
     Iterator_ptr itor = newShaderInfoIterator(hd);
     ShaderContainer_ptr scon = nullptr;
@@ -829,6 +841,7 @@ void fill(CanvaHandle_ptr hd)
             AET = newLinkListNode(AET, (void *)fn);
     }
     releaser(itor);
+    shaderStatus = stSTROKE;
 
     // // Use Scanline Fill Algorithm
     // LinkList_ptr AET = NULL;
@@ -946,14 +959,33 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 
     while (drawX + 1 > drawY)
     {
-        IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
-        IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
-        IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
-        IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
-        IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
-        IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
-        IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
-        IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
+        switch (shaderStatus)
+        {
+        case stSTROKE:
+        {
+            IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
+            IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
+            IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
+            IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
+            IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
+            IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
+            IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
+            IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
+        }
+        break;
+        case stFILL:
+        {
+            writeFPoint(currentShaderInfo, drawX + x, drawY + y);
+            writeFPoint(currentShaderInfo, drawY + x, drawX + y);
+            writeFPoint(currentShaderInfo, -drawY + x, drawX + y);
+            writeFPoint(currentShaderInfo, -drawX + x, drawY + y);
+            writeFPoint(currentShaderInfo, -drawX + x, -drawY + y);
+            writeFPoint(currentShaderInfo, -drawY + x, -drawX + y);
+            writeFPoint(currentShaderInfo, drawY + x, -drawX + y);
+            writeFPoint(currentShaderInfo, drawX + x, -drawY + y);
+        }
+        break;
+        }
 
         if (d >= 0)
         {
@@ -971,32 +1003,70 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 // HINT: Not a API Function. This Function Called by arc() Only.
 void arcDraw(int arcId, int drawX, int drawY, int x, int y, uint8_t colorH8b, uint8_t colorL8b)
 {
-    switch (arcId)
+    switch (shaderStatus)
     {
-    case 0:
-        IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
-        break;
-    case 4:
-        IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
-        break;
-    case 6:
-        IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
-        break;
-    case 2:
-        IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
-        break;
-    case 3:
-        IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
-        break;
-    case 7:
-        IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
-        break;
-    case 5:
-        IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
-        break;
-    case 1:
-        IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
-        break;
+    case stSTROKE:
+    {
+        switch (arcId)
+        {
+        case 0:
+            IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
+            break;
+        case 4:
+            IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
+            break;
+        case 6:
+            IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
+            break;
+        case 2:
+            IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
+            break;
+        case 3:
+            IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
+            break;
+        case 7:
+            IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
+            break;
+        case 5:
+            IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
+            break;
+        case 1:
+            IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
+            break;
+        }
+    }
+    break;
+    case stFILL:
+    {
+        switch (arcId)
+        {
+        case 0:
+            writeFPoint(currentShaderInfo, drawX + x, drawY + y);
+            break;
+        case 4:
+            writeFPoint(currentShaderInfo, drawY + x, drawX + y);
+            break;
+        case 6:
+            writeFPoint(currentShaderInfo, -drawY + x, drawX + y);
+            break;
+        case 2:
+            writeFPoint(currentShaderInfo, -drawX + x, drawY + y);
+            break;
+        case 3:
+            writeFPoint(currentShaderInfo, -drawX + x, -drawY + y);
+            break;
+        case 7:
+            writeFPoint(currentShaderInfo, -drawY + x, -drawX + y);
+            break;
+        case 5:
+            writeFPoint(currentShaderInfo, drawY + x, -drawX + y);
+            break;
+        case 1:
+            writeFPoint(currentShaderInfo, drawX + x, -drawY + y);
+            break;
+        }
+    }
+    break;
     }
 }
 // HINT: Not a API Function. This Function Called by arc() Only.
@@ -1147,6 +1217,12 @@ void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float e
 
     float endDrawPointX = ((float)radius * cos(endAngle));
     float endDrawPointY = ((float)radius * sin(endAngle));
+
+    // ! Not sure about this
+    if (anticlockwise)
+        connectLine(hd, x + endDrawPointX, y + endDrawPointY);
+    else
+        connectLine(hd, x + startDrawPointX, y + startDrawPointY);
 
     writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hd->antialiasing);
 
