@@ -7,9 +7,9 @@
 #include "canvas_shader.h"
 #include "canvas.h"
 
-// * Shader status group
-uint8_t shaderStatus = stSTROKE;
-LinkList_ptr *currentShaderInfo = nullptr;
+// * Shader status info
+uint8_t ShaderStatus = stSTROKE;
+LinkList_ptr *CurrentShaderInfo = nullptr;
 
 // * Iterators
 
@@ -32,14 +32,14 @@ Iterator_ptr newShaderInfoIterator(CanvaHandle_ptr hdl)
 }
 
 // In each loop, use this turn to next Y row
-ShaderContainer_ptr nextShaderInfo(Iterator_ptr itor)
+ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor)
 {
     ShaderContainer_ptr scon = nullptr;
     if (itor != nullptr)
     {
         if (itor->iteratorType == SHADER_INFO)
         {
-            if (itor->val2 == 0)
+            if (itor->val2 == 0) // End flag of iterator
             {
                 CanvaHandle_ptr hdl = (CanvaHandle_ptr)itor->data1;
                 LinkList_ptr info = nullptr;
@@ -116,6 +116,7 @@ ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
 FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm)
 {
     FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
+    pt->TYPE = FN_LINE;
     pt->ax = ax;
     pt->bx = bx;
     pt->by = by;
@@ -126,6 +127,7 @@ FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm)
 FillNode_ptr newFillNode_point(int x, int y)
 {
     FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
+    pt->TYPE = FN_POINT;
     pt->x = x;
     pt->y = y;
     return pt;

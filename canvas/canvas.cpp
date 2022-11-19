@@ -588,7 +588,7 @@ void stroke(CanvaHandle_ptr hd)
     while (!shaderInfoIterateEnd(itor))
     {
         curY = currentShaderInfoItorY(itor);
-        scon = nextShaderInfo(itor);
+        scon = nextShaderContainer(itor);
         if (scon != nullptr)
         {
             switch (scon->TYPE)
@@ -791,20 +791,36 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
 
 void fill(CanvaHandle_ptr hd)
 {
+    // Prepare shader info
+    ShaderStatus = stFILL;
+    CurrentShaderInfo = hd->shaderInfo;
+
     // Prepare iterator
-    shaderStatus = stFILL;
-    currentShaderInfo = hd->shaderInfo;
     int curY;
     Iterator_ptr itor = newShaderInfoIterator(hd);
     ShaderContainer_ptr scon = nullptr;
 
     // Resolve some graphic to point
-    while (!shaderInfoIterateEnd(itor))
-    {
-        curY = currentShaderInfoItorY(itor);
-        scon = nextShaderInfo(itor);
-    }
-    releaser(itor);
+    // while (!shaderInfoIterateEnd(itor))
+    // {
+    //     curY = currentShaderInfoItorY(itor);
+    //     scon = nextShaderContainer(itor);
+    //     if (scon == nullptr)
+    //         continue;
+
+    //     switch (scon->TYPE)
+    //     {
+    //     case SARC:
+    //     {
+    //         sArc_ptr sarc = (sArc_ptr)scon->data;
+
+    //         arcInstance(hd, scon->x, curY, sarc->radius,
+    //                     sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
+    //     }
+    //     break;
+    //     }
+    // }
+    // releaser(itor);
 
     // Use Scanline Fill Algorithm
     LinkList_ptr AET = NULL;
@@ -812,11 +828,19 @@ void fill(CanvaHandle_ptr hd)
     while (!shaderInfoIterateEnd(itor))
     {
         curY = currentShaderInfoItorY(itor);
-        scon = nextShaderInfo(itor);
+        scon = nextShaderContainer(itor);
+        if (scon == nullptr)
+            continue;
+
         // Generate node
         FillNode_ptr fn = nullptr;
         switch (scon->TYPE)
         {
+        case FPOINT:
+        {
+            fn = newFillNode_point(scon->x, curY);
+        }
+        break;
         case SPOINT_RGBA32:
         {
             sPointRGBA32_ptr sp = (sPointRGBA32_ptr)scon->data;
@@ -837,11 +861,22 @@ void fill(CanvaHandle_ptr hd)
         }
         break;
         }
+
+        // Add node to AET
         if (fn != nullptr)
             AET = newLinkListNode(AET, (void *)fn);
+
+        // Check nodes in AET which need to remove from it
+        if (AET == nullptr)
+            continue;
+        LinkList_ptr node = AET;
+        // for (;;)
+        // {
+        //     FillNode_ptr fn = (FillNode_ptr)node;
+        // }
     }
     releaser(itor);
-    shaderStatus = stSTROKE;
+    ShaderStatus = stSTROKE;
 
     // // Use Scanline Fill Algorithm
     // LinkList_ptr AET = NULL;
@@ -959,7 +994,7 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 
     while (drawX + 1 > drawY)
     {
-        switch (shaderStatus)
+        switch (ShaderStatus)
         {
         case stSTROKE:
         {
@@ -975,14 +1010,14 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
         break;
         case stFILL:
         {
-            writeFPoint(currentShaderInfo, drawX + x, drawY + y);
-            writeFPoint(currentShaderInfo, drawY + x, drawX + y);
-            writeFPoint(currentShaderInfo, -drawY + x, drawX + y);
-            writeFPoint(currentShaderInfo, -drawX + x, drawY + y);
-            writeFPoint(currentShaderInfo, -drawX + x, -drawY + y);
-            writeFPoint(currentShaderInfo, -drawY + x, -drawX + y);
-            writeFPoint(currentShaderInfo, drawY + x, -drawX + y);
-            writeFPoint(currentShaderInfo, drawX + x, -drawY + y);
+            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y);
+            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y);
+            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y);
+            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y);
+            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y);
+            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y);
+            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y);
+            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y);
         }
         break;
         }
@@ -1003,7 +1038,7 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 // HINT: Not a API Function. This Function Called by arc() Only.
 void arcDraw(int arcId, int drawX, int drawY, int x, int y, uint8_t colorH8b, uint8_t colorL8b)
 {
-    switch (shaderStatus)
+    switch (ShaderStatus)
     {
     case stSTROKE:
     {
@@ -1041,28 +1076,28 @@ void arcDraw(int arcId, int drawX, int drawY, int x, int y, uint8_t colorH8b, ui
         switch (arcId)
         {
         case 0:
-            writeFPoint(currentShaderInfo, drawX + x, drawY + y);
+            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y);
             break;
         case 4:
-            writeFPoint(currentShaderInfo, drawY + x, drawX + y);
+            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y);
             break;
         case 6:
-            writeFPoint(currentShaderInfo, -drawY + x, drawX + y);
+            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y);
             break;
         case 2:
-            writeFPoint(currentShaderInfo, -drawX + x, drawY + y);
+            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y);
             break;
         case 3:
-            writeFPoint(currentShaderInfo, -drawX + x, -drawY + y);
+            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y);
             break;
         case 7:
-            writeFPoint(currentShaderInfo, -drawY + x, -drawX + y);
+            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y);
             break;
         case 5:
-            writeFPoint(currentShaderInfo, drawY + x, -drawX + y);
+            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y);
             break;
         case 1:
-            writeFPoint(currentShaderInfo, drawX + x, -drawY + y);
+            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y);
             break;
         }
     }

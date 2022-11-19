@@ -6,13 +6,13 @@
 //* Shader system
 
 //* Shader status group
-enum shaderStatusGroup
+enum ShaderStatus_type
 {
     stSTROKE,
     stFILL
 };
-extern uint8_t shaderStatus;
-extern LinkList_ptr *currentShaderInfo;
+extern uint8_t ShaderStatus;
+extern LinkList_ptr *CurrentShaderInfo;
 
 typedef struct ShaderContainer ShaderContainer_t;
 typedef struct ShaderContainer *ShaderContainer_ptr;
@@ -29,12 +29,14 @@ struct ShaderContainer
 ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
 
-enum ShaderContainer_enum
+enum ShaderContainer_type
 {
     SPOINT_RGB888,
     SPOINT_RGBA32,
     SLINE,
-    FPOINT, // For filling use
+
+    // For filling use
+    FPOINT,
 
     // Need resolve to points when fill
     SARC,
@@ -44,15 +46,22 @@ enum ShaderContainer_enum
 //* For Fill use
 typedef struct FillNode FillNode_t;
 typedef struct FillNode *FillNode_ptr;
+enum FillNode_type
+{
+    FN_LINE,
+    FN_POINT
+};
 struct FillNode
 {
-    // For line use
+    uint8_t TYPE;
+
+    // For FN_LINE use
     float ax;
     float bx;
     float by;
     float tm;
-
-    // For point use
+    
+    // For FN_POINT use
     int x;
     int y;
 };
@@ -77,7 +86,7 @@ struct Iterator
 };
 
 Iterator_ptr newShaderInfoIterator(CanvaHandle_ptr hdl);
-ShaderContainer_ptr nextShaderInfo(Iterator_ptr itor);
+ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor);
 int currentShaderInfoItorY(Iterator_ptr itor);
 bool shaderInfoIterateEnd(Iterator_ptr itor);
 

@@ -146,7 +146,7 @@ canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8
  * (coordOrigin)0· --------------- ·3(coordOrigin)
  *                 ---------------
  *                 ----DISPLAY----
- *                 ---------------u
+ *                 ---------------
  * (coordOrigin)1· --------------- ·2(coordOrigin)
  */
 //* Adjust the origin point of coordinate and the direction of x and y axis

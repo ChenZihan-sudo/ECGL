@@ -65,6 +65,7 @@ int simECGL_main()
     // fill(ctx);
     ctx->rgb888 = 0xFF0000;
     stroke(ctx);
+    fill(ctx);
     write_display_memory_on();
 
     Iterator_ptr itor = newShaderInfoIterator(ctx);
@@ -73,7 +74,7 @@ int simECGL_main()
     while (!shaderInfoIterateEnd(itor))
     {
         curY = currentShaderInfoItorY(itor);
-        scon = nextShaderInfo(itor);
+        scon = nextShaderContainer(itor);
         printf("Y:%d\n", curY);
         if (scon != nullptr)
         {
@@ -86,6 +87,11 @@ int simECGL_main()
             case SPOINT_RGBA32:
             {
                 printf("SPOINT_RGBA32\n");
+            }
+            break;
+            case FPOINT:
+            {
+                printf("FPOINT\n");
             }
             break;
             case SLINE:
