@@ -83,11 +83,13 @@ struct Iterator
     void *data2;
     int val1;
     int val2;
+    int val3;
 };
 
 Iterator_ptr newShaderInfoIterator(CanvaHandle_ptr hdl);
 ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor);
 int currentShaderInfoItorY(Iterator_ptr itor);
+int currentShaderInfoItorYChanged(Iterator_ptr itor);
 bool shaderInfoIterateEnd(Iterator_ptr itor);
 
 // HINT 可以优化的: 减少点集的访问内存次数,ShaderContainer使用union保存RGBA32点

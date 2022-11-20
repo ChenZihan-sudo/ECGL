@@ -18,6 +18,7 @@ LinkList_ptr *CurrentShaderInfo = nullptr;
 // void *data2; -> current shaderInfo data pointer, store the LinkList_ptr data
 // int val1; -> store the current line y posi
 // int val2; -> the end flag of iterator
+// int val3; -> the flag of whether current line y posi increased when call nextShaderContainer()
 
 Iterator_ptr newShaderInfoIterator(CanvaHandle_ptr hdl)
 {
@@ -39,6 +40,7 @@ ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor)
     {
         if (itor->iteratorType == SHADER_INFO)
         {
+            itor->val3 = 0;
             if (itor->val2 == 0) // End flag of iterator
             {
                 CanvaHandle_ptr hdl = (CanvaHandle_ptr)itor->data1;
@@ -63,10 +65,14 @@ ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor)
                     {
                         itor->data2 = nullptr;
                         itor->val1++;
+                        itor->val3 = 1;
                     }
                 }
                 else
+                {
                     itor->val1++;
+                    itor->val3 = 1;
+                }
 
                 int min = hdl->scanLineMin;
                 int max = hdl->scanLineMax;
@@ -86,6 +92,15 @@ int currentShaderInfoItorY(Iterator_ptr itor)
             return itor->val1;
     return 0;
 };
+
+// Giving whether line y posi increased when call nextShaderContainer().
+int currentShaderInfoItorYChanged(Iterator_ptr itor)
+{
+    if (itor != nullptr)
+        if (itor->iteratorType == SHADER_INFO)
+            return itor->val3;
+    return 0;
+}
 
 // Boolean giving whether the iteration is over
 bool shaderInfoIterateEnd(Iterator_ptr itor)

@@ -106,21 +106,13 @@ CanvaHandle_ptr releaseCanva(CanvaHandle_ptr canva)
 
 // * Canvas Functions
 
-// HINT: Not a API Function. This function called by lineTo() only.
-bool compareET_lineTo(void *data1, void *data2)
-{
-    XET_ptr xetptr1 = (XET_ptr)data1;
-    XET_ptr xetptr2 = (XET_ptr)data2;
-    return xetptr1->by < xetptr2->by;
-}
-
-// HINT: Not a API Function. This function called by lineTo() only.
-bool compareET_fill(void *data1, void *data2)
-{
-    XET_ptr xetptr1 = (XET_ptr)data1;
-    XET_ptr xetptr2 = (XET_ptr)data2;
-    return xetptr1->ax <= xetptr2->ax;
-}
+// // HINT: Not a API Function. This function called by lineTo() only.
+// bool compareET_lineTo(void *data1, void *data2)
+// {
+//     XET_ptr xetptr1 = (XET_ptr)data1;
+//     XET_ptr xetptr2 = (XET_ptr)data2;
+//     return xetptr1->by < xetptr2->by;
+// }
 
 bool outAreaBoundTruncated(int *px, int *py)
 {
@@ -582,8 +574,8 @@ void stroke(CanvaHandle_ptr hd)
     uint8_t colorH8b = (rgb888 >> 8) & 0xFF;
     uint8_t colorL8b = rgb888 & 0xFF;
 
-    Iterator_ptr itor = newShaderInfoIterator(hd);
     int curY;
+    Iterator_ptr itor = newShaderInfoIterator(hd);
     ShaderContainer_ptr scon = nullptr;
     while (!shaderInfoIterateEnd(itor))
     {
@@ -639,7 +631,7 @@ void stroke(CanvaHandle_ptr hd)
     }
 };
 
-// TODO: OPTIMITE THIS CODE
+// TODO: OPTIMITE THIS CODE BELOW
 // ? High effective flood fill algorithm reference from: http://www.williammalone.com/articles/html5-canvas-javascript-paint-bucket-tool/
 // enum FloodFillRepresentType
 // {
@@ -651,6 +643,8 @@ void stroke(CanvaHandle_ptr hd)
 void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fillColor)
 {
     Stack_ptr st = nullptr;
+    // This stack data model can expand capacity automatic,
+    // so set capacity whatever depend on yourself.
     st = newStack(st, 100, true);
 
     Point_ptr pt = nullptr;
@@ -789,11 +783,48 @@ void floodFill(int fillType, int seedX, int seedY, RGB888 typeColor, RGB888 fill
     st = releaseStack(st);
 };
 
+// HINT: Not a API Function. This function called by fill() only.
+bool fill_compareFillNode(void *data1, void *data2)
+{
+    FillNode_ptr fn1 = (FillNode_ptr)data1;
+    FillNode_ptr fn2 = (FillNode_ptr)data2;
+    float compare1, compare2;
+    switch (fn1->TYPE)
+    {
+    case FN_LINE:
+        compare1 = fn1->ax;
+        break;
+    case FN_POINT:
+        compare1 = (float)fn1->x;
+        break;
+    }
+    switch (fn2->TYPE)
+    {
+    case FN_LINE:
+        compare2 = fn2->ax;
+        break;
+    case FN_POINT:
+        compare2 = (float)fn2->x;
+        break;
+    }
+
+    return flLESSE(compare1, compare2);
+
+    // XET_ptr xetptr1 = (XET_ptr)data1;
+    // XET_ptr xetptr2 = (XET_ptr)data2;
+    // return xetptr1->ax <= xetptr2->ax;
+}
+
 void fill(CanvaHandle_ptr hd)
 {
     // Prepare shader info
     ShaderStatus = stFILL;
     CurrentShaderInfo = hd->shaderInfo;
+
+    // Prepare Color data
+    uint16_t color = RGB888_to_RGB565(hd->rgb888);
+    uint8_t colorH8b = (color >> 8) & 0xFF;
+    uint8_t colorL8b = color & 0xFF;
 
     // Prepare iterator
     int curY;
@@ -801,30 +832,6 @@ void fill(CanvaHandle_ptr hd)
     ShaderContainer_ptr scon = nullptr;
 
     // Resolve some graphic to point
-    // while (!shaderInfoIterateEnd(itor))
-    // {
-    //     curY = currentShaderInfoItorY(itor);
-    //     scon = nextShaderContainer(itor);
-    //     if (scon == nullptr)
-    //         continue;
-
-    //     switch (scon->TYPE)
-    //     {
-    //     case SARC:
-    //     {
-    //         sArc_ptr sarc = (sArc_ptr)scon->data;
-
-    //         arcInstance(hd, scon->x, curY, sarc->radius,
-    //                     sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
-    //     }
-    //     break;
-    //     }
-    // }
-    // releaser(itor);
-
-    // Use Scanline Fill Algorithm
-    LinkList_ptr AET = NULL;
-    itor = newShaderInfoIterator(hd);
     while (!shaderInfoIterateEnd(itor))
     {
         curY = currentShaderInfoItorY(itor);
@@ -832,153 +839,221 @@ void fill(CanvaHandle_ptr hd)
         if (scon == nullptr)
             continue;
 
-        // Generate node
-        FillNode_ptr fn = nullptr;
         switch (scon->TYPE)
         {
-        case FPOINT:
+        case SARC:
         {
-            fn = newFillNode_point(scon->x, curY);
-        }
-        break;
-        case SPOINT_RGBA32:
-        {
-            sPointRGBA32_ptr sp = (sPointRGBA32_ptr)scon->data;
-            if (sp->keyPoint)
-                fn = newFillNode_point(scon->x, curY);
-        }
-        break;
-        case SPOINT_RGB888:
-        {
-            fn = newFillNode_point(scon->x, curY);
-        }
-        break;
-        case SLINE:
-        {
-            sLine_ptr sli = (sLine_ptr)scon->data;
-            float tm = ((float)sli->x1 - (float)scon->x) / ((float)sli->y1 - (float)curY);
-            fn = newFillNode_line((float)scon->x, (float)curY, (float)sli->x1, tm);
-        }
-        break;
-        }
+            sArc_ptr sarc = (sArc_ptr)scon->data;
 
-        // Add node to AET
-        if (fn != nullptr)
-            AET = newLinkListNode(AET, (void *)fn);
-
-        // Check nodes in AET which need to remove from it
-        if (AET == nullptr)
-            continue;
-        LinkList_ptr node = AET;
-        // for (;;)
-        // {
-        //     FillNode_ptr fn = (FillNode_ptr)node;
-        // }
+            arcInstance(hd, scon->x, curY, sarc->radius,
+                        sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
+        }
+        break;
+        }
     }
     releaser(itor);
+
+    // Use Scanline Fill Algorithm
+    LinkList_ptr AET = NULL;
+    int curYChanged = 0;
+    itor = newShaderInfoIterator(hd);
+    while (!shaderInfoIterateEnd(itor))
+    {
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderContainer(itor);
+        curYChanged = currentShaderInfoItorYChanged(itor);
+
+        printf("curY:%d\n", curY);
+
+        if (scon != nullptr)
+        {
+            // Generate node
+            FillNode_ptr fn = nullptr;
+            switch (scon->TYPE)
+            {
+            case FPOINT:
+            {
+                fn = newFillNode_point(scon->x, curY);
+            }
+            break;
+            case SPOINT_RGBA32:
+            {
+                sPointRGBA32_ptr sp = (sPointRGBA32_ptr)scon->data;
+                if (sp->keyPoint)
+                    fn = newFillNode_point(scon->x, curY);
+            }
+            break;
+            case SPOINT_RGB888:
+            {
+                fn = newFillNode_point(scon->x, curY);
+            }
+            break;
+            case SLINE:
+            {
+                sLine_ptr sli = (sLine_ptr)scon->data;
+                float tm = 0.f;
+                if (sli->y1 - (float)curY != 0.f)
+                    tm = ((float)sli->x1 - (float)scon->x) / ((float)sli->y1 - (float)curY);
+                fn = newFillNode_line((float)scon->x, (float)sli->x1, (float)sli->y1, tm);
+            }
+            break;
+            }
+
+            // Add node to AET
+            if (fn != nullptr)
+                AET = newLinkListNode(AET, (void *)fn);
+        }
+
+        //?TEST
+        // if (AET != nullptr)
+        // {
+        //     printf("Current AET:\n");
+        //     LinkList_ptr lla = AET;
+        //     for (;;)
+        //     {
+        //         FillNode_ptr fn = (FillNode_ptr)lla->data;
+        //         if (fn->TYPE == FN_LINE)
+        //         {
+        //             printf("%f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
+        //         }
+        //         if (lla->next != nullptr)
+        //             lla = lla->next;
+        //         else
+        //             break;
+        //     }
+        //     printf("------------\n");
+        // }
+
+        if (curYChanged)
+        {
+            if (AET != nullptr)
+            {
+                // Check nodes in AET and remove it if need.
+                LinkList_ptr node = AET;
+                LinkList_ptr lastNode = nullptr;
+                LinkList_ptr next = nullptr;
+                for (;;)
+                {
+                    next = node->next;
+                    FillNode_ptr fn = (FillNode_ptr)node->data;
+                    // The main propose of using goto is to made
+                    // the code not repeat and improve efficiency.
+                    switch (fn->TYPE)
+                    {
+                    case FN_POINT:
+                    {
+                        if (fn->y < curY)
+                        {
+                            printf("Delete Point %d %d\n", fn->x, fn->y);
+                            goto deleteNode;
+                        }
+                    }
+                    break;
+                    case FN_LINE:
+                    {
+                        if (fn->by <= (float)curY)
+                        {
+                            printf("Delete LINE %f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
+                            goto deleteNode;
+                        }
+                    }
+                    break;
+                    }
+
+                    while (false)
+                    {
+                    deleteNode:
+                        next = node->next;
+                        free(fn);
+                        free(node);
+                        node = nullptr;
+                        if (lastNode != nullptr)
+                            lastNode->next = next;
+                        else
+                            AET = next;
+                    }
+
+                    if (next != nullptr)
+                    {
+                        if (node != nullptr)
+                            lastNode = node;
+                        node = next;
+                    }
+                    else
+                        break;
+                }
+            }
+
+            // Sort the nodes
+            AET = sortLinkList(AET, fill_compareFillNode);
+
+            // Draw the pixel
+            LinkList_ptr nodes = AET;
+            if (AET != nullptr)
+            {
+                while (nodes != nullptr)
+                {
+                    int drawBegin, drawEnd;
+
+                    FillNode_ptr fnBegin = (FillNode_ptr)nodes->data;
+                    switch (fnBegin->TYPE)
+                    {
+                    case FN_LINE:
+                        drawBegin = (int)fnBegin->ax + 1;
+                        break;
+                    case FN_POINT:
+                        drawBegin = fnBegin->x + 1;
+                        break;
+                    }
+
+                    // Read next node
+                    nodes = readLinkListNode(nodes);
+                    if (nodes == nullptr)
+                        break;
+
+                    FillNode_ptr fnEnd = (FillNode_ptr)nodes->data;
+                    switch (fnEnd->TYPE)
+                    {
+                    case FN_LINE:
+                        drawEnd = (int)fnEnd->ax;
+                        break;
+                    case FN_POINT:
+                        drawEnd = fnEnd->x;
+                        break;
+                    }
+
+                    printf("%d %d\n", drawBegin, drawEnd);
+
+                    // Draw
+                    int drawY = curY;
+                    for (int drawX = drawBegin; drawX < drawEnd; drawX++)
+                    {
+                        IDM_writeColor(drawX, drawY, colorH8b, colorL8b);
+                    }
+
+                    nodes = readLinkListNode(nodes);
+                }
+            }
+
+            // Update the AET nodes
+            nodes = AET;
+            while (nodes != nullptr)
+            {
+                FillNode_ptr fn = (FillNode_ptr)nodes->data;
+                if (fn->TYPE == FN_LINE)
+                    fn->ax += fn->tm;
+                nodes = readLinkListNode(nodes);
+            }
+        }
+    }
+    releaser(itor);
+    // Clean up memory fragments if necessary.
+    if (AET != nullptr)
+    {
+        printf("Fragments!!!\n");
+    }
     ShaderStatus = stSTROKE;
-
-    // // Use Scanline Fill Algorithm
-    // LinkList_ptr AET = NULL;
-
-    // size_t i, end = hd->scanLineMax;
-    // for (i = hd->scanLineMin; i <= end; i++)
-    // {
-    //     // Add the node to AET
-    //     if (hd->shaderInfo[i] != NULL)
-    //     {
-    //         LinkList_ptr xet = hd->shaderInfo[i];
-    //         for (;;)
-    //         {
-    //             XET_ptr xetData = (XET_ptr)xet->data;
-
-    //             if (xetData->by - (float)i == 0.f)
-    //                 xetData->tm = 0.f;
-    //             else
-    //                 xetData->tm = (xetData->bx - xetData->ax) / (xetData->by - (float)i);
-    //             XET_ptr aetNode = (XET_ptr)malloc(sizeof(XET_t));
-    //             memcpy(aetNode, xet->data, sizeof(XET_t));
-    //             AET = newLinkListNode(AET, (void *)aetNode);
-    //             if (xet->next != NULL)
-    //                 xet = xet->next;
-    //             else
-    //                 break;
-    //         }
-    //     }
-
-    //     // Check the node in AET which need to remove from it
-    //     if (AET != NULL)
-    //     {
-    //         LinkList_ptr node = AET;
-    //         for (;;)
-    //         {
-    //             XET_ptr nodeInfo = (XET_ptr)node->data;
-    //             if (nodeInfo->by <= (float)i)
-    //             {
-    //                 LinkList_ptr nodeNext = node->next;
-    //                 //? OPTIMIZE: We can optimize it by writing its own delete func to avoid using deleteLinkListNode() to find node and loop again
-    //                 AET = deleteLinkListNode(AET, node);
-    //                 if (nodeNext != NULL)
-    //                     node = nodeNext;
-    //                 else
-    //                     break;
-    //             }
-    //             else
-    //             {
-    //                 if (node->next != NULL)
-    //                     node = node->next;
-    //                 else
-    //                 {
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // Sort the node
-    //     AET = sortLinkList(AET, compareET_fill);
-
-    //     if (AET != NULL)
-    //     {
-    //         // Draw the pixel
-    //         LinkList_ptr aetNode = AET;
-    //         uint16_t color = RGB888_to_RGB565(hd->rgb888);
-    //         uint8_t colorH8b = (color >> 8) & 0xFF;
-    //         uint8_t colorL8b = color & 0xFF;
-
-    //         while (aetNode != NULL)
-    //         {
-    //             // i: current y
-    //             // ax: current x
-    //             XET_ptr aetDataB = (XET_ptr)aetNode->data;
-    //             int drawBegin = (int)aetDataB->ax + 1;
-    //             aetNode = readLinkListNode(aetNode);
-    //             if (aetNode == NULL)
-    //                 break;
-    //             XET_ptr aetDataE = (XET_ptr)aetNode->data;
-    //             int drawEnd = (int)aetDataE->ax + 1;
-
-    //             // Draw
-    //             for (int drawX = drawBegin; drawX < drawEnd - 1; drawX++)
-    //             {
-    //                 int drawY = (int)i;
-    //                 IDM_writeColor(drawX, drawY, colorH8b, colorL8b);
-    //             }
-
-    //             aetNode = readLinkListNode(aetNode);
-    //         }
-
-    //         // Update the AET nodes
-    //         aetNode = AET;
-    //         while (aetNode != NULL)
-    //         {
-    //             XET_ptr aetData = (XET_ptr)aetNode->data;
-    //             aetData->ax += aetData->tm;
-    //             aetNode = readLinkListNode(aetNode);
-    //         }
-    //     }
-    // }
-};
+}
 
 void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
 {

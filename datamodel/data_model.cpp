@@ -94,6 +94,7 @@ LinkList_ptr sortNewLinkListNode(LinkList_ptr linklist, void *data,
     return newLinkListNode(linklist, data);
 }
 
+// HINT 改进sortLinkList的时间复杂度
 LinkList_ptr sortLinkList(LinkList_ptr linklist,
                           bool (*compare)(void *data1, void *data2))
 {

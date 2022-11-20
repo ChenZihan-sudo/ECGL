@@ -58,15 +58,11 @@ int simECGL_main()
     lineTo(ctx, 250, 150);
     lineTo(ctx, 150, 300);
     closePath(ctx);
-    moveTo(ctx, 0, 0);
-    arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
+    // moveTo(ctx, 0, 0);
+    // arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
 
     // ctx->rgb888 = 0x00FF00;
     // fill(ctx);
-    ctx->rgb888 = 0xFF0000;
-    stroke(ctx);
-    fill(ctx);
-    write_display_memory_on();
 
     Iterator_ptr itor = newShaderInfoIterator(ctx);
     int curY;
@@ -97,6 +93,8 @@ int simECGL_main()
             case SLINE:
             {
                 printf("SLINE\n");
+                sLine_ptr sli = (sLine_ptr)scon->data;
+                printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
             }
             break;
             case SARC:
@@ -112,6 +110,15 @@ int simECGL_main()
             }
         }
     }
+
+    printf("---------------------------\n");
+
+    ctx->rgb888 = 0x0000FF;
+    fill(ctx);
+    ctx->rgb888 = 0xFFFFFF;
+    stroke(ctx);
+
+    write_display_memory_on();
 
     return 0;
 }

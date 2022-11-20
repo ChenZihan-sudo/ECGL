@@ -73,8 +73,8 @@ struct Point
 Point_ptr newPoint(Point_ptr pt, int x, int y);
 
 //* Not API Functions.
-bool compareET_lineTo(void *data1, void *data2); // This function called by "void lineTo(CanvaHandle_ptr phd, int x, int y)" only.
-bool compareET_fill(void *data1, void *data2);   // This function called by "void fill(CanvaHandle_ptr phd)" only.
+bool compareET_lineTo(void *data1, void *data2);     // This function called by "void lineTo(CanvaHandle_ptr phd, int x, int y)" only.
+bool fill_compareFillNode(void *data1, void *data2); // This function called by "void fill(CanvaHandle_ptr phd)" only.
 int parts8EncodeTool(float pointX, float pointY);
 void circularConeFiler_writeColor(int x, int y, RGB888 color, float distance);
 void tranStrokeLinePosi(int id, int *x, int *y);
