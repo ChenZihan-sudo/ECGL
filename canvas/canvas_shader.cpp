@@ -128,7 +128,7 @@ ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
 };
 
 //* For Fill use
-FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm)
+FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise)
 {
     FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
     pt->TYPE = FN_LINE;
@@ -136,21 +136,24 @@ FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm)
     pt->bx = bx;
     pt->by = by;
     pt->tm = tm;
+    pt->anticlockwise = anticlockwise;
     return pt;
 }
 
-FillNode_ptr newFillNode_point(int x, int y)
+FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise)
 {
     FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
     pt->TYPE = FN_POINT;
     pt->x = x;
     pt->y = y;
+    pt->anticlockwise = anticlockwise;
     return pt;
 }
 
-void writeFPoint(LinkList_ptr *shaderInfo, int x, int y)
+void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise)
 {
     ShaderContainer_ptr scon = newShaderContainer(x, y, FPOINT, nullptr);
+    scon->anticlockwise = anticlockwise;
     shaderInfo[y] = newLinkListNode(shaderInfo[y], (void *)scon);
 }
 
@@ -171,13 +174,14 @@ ShaderContainer_ptr newSPointRGB888(int x, int y)
 }
 
 //* Line
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing)
+ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise)
 {
     sLine_ptr pt = nullptr;
     pt = (sLine_ptr)malloc(sizeof(sLine_t));
     pt->x1 = x1;
     pt->y1 = y1;
     pt->antialiasing = antialiasing;
+    pt->anticlockwise = anticlockwise;
     return newShaderContainer(x0, y0, SLINE, (void *)pt);
 }
 
@@ -235,9 +239,9 @@ void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool k
     shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 
-void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing)
+void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise)
 {
-    ShaderContainer_ptr scon = newSLine(x0, y0, x1, y1, antialiasing);
+    ShaderContainer_ptr scon = newSLine(x0, y0, x1, y1, antialiasing, anticlockwise);
     shaderInfo[y0] = sortNewLinkListNode(shaderInfo[y0], (void *)scon, shaderPointCompare);
 }
 

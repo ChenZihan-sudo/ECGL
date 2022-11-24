@@ -25,6 +25,7 @@ struct ShaderContainer
 
     // For FPOINT use
     bool filled;
+    bool anticlockwise;
 };
 ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
@@ -60,14 +61,16 @@ struct FillNode
     float bx;
     float by;
     float tm;
-    
+
     // For FN_POINT use
     int x;
     int y;
+
+    bool anticlockwise; // For NONZERO use
 };
-FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm);
-FillNode_ptr newFillNode_point(int x, int y);
-void writeFPoint(LinkList_ptr *shaderInfo, int x, int y);
+FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise);
+FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise);
+void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise);
 
 //* Iterator
 enum IteratorType
@@ -114,8 +117,9 @@ struct sLine
     int x1;
     int y1;
     bool antialiasing;
+    bool anticlockwise; // For nonzero fill use
 };
-ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing);
+ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise);
 
 //* Arc
 typedef struct sArc sArc_t;
@@ -150,7 +154,7 @@ ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height,
 bool shaderPointCompare(void *data1, void *data2);
 void writeSPoint(LinkList_ptr *shaderInfo, int x, int y);
 void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint);
-void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing);
+void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise);
 void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius,
                float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
 void writeSRoundRect(LinkList_ptr *shaderInfo, int x, int y, int width, int height,

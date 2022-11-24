@@ -52,71 +52,94 @@ int simECGL_main()
     ctx = newCanva(ctx);
     beginPath(ctx);
 
-    moveTo(ctx, 100, 100);
-    lineTo(ctx, 200, 200);
-    lineTo(ctx, 300, 200);
-    lineTo(ctx, 250, 150);
-    lineTo(ctx, 150, 300);
-    closePath(ctx);
-    // moveTo(ctx, 0, 0);
-    // arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
+    //!!! Useful
+    // moveTo(ctx, 100, 100);
+    // lineTo(ctx, 200, 200);
+    // lineTo(ctx, 300, 200);
+    // lineTo(ctx, 250, 150);
+    // lineTo(ctx, 150, 300);
+    // lineTo(ctx, 100, 100);
+    // closePath(ctx);
+    // lineTo(ctx, 70, 200);
+    // lineTo(ctx, 150, 300);
+    // arc(ctx, 40, 200, 30, 0.f * PI, 2.f * PI, false);
 
-    // ctx->rgb888 = 0x00FF00;
-    // fill(ctx);
+    // moveTo(ctx, 100, 100);
+    // lineTo(ctx, 200, 200);
+    // lineTo(ctx, 300, 200);
+    // lineTo(ctx, 250, 150);
+    // lineTo(ctx, 150, 300);
+    // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
+    // closePath(ctx);
 
-    Iterator_ptr itor = newShaderInfoIterator(ctx);
-    int curY;
-    ShaderContainer_ptr scon = nullptr;
-    while (!shaderInfoIterateEnd(itor))
-    {
-        curY = currentShaderInfoItorY(itor);
-        scon = nextShaderContainer(itor);
-        printf("Y:%d\n", curY);
-        if (scon != nullptr)
-        {
-            switch (scon->TYPE)
-            {
-            case SPOINT_RGB888:
-            {
-                printf("SPOINT_RGB888\n");
-            }
-            case SPOINT_RGBA32:
-            {
-                printf("SPOINT_RGBA32\n");
-            }
-            break;
-            case FPOINT:
-            {
-                printf("FPOINT\n");
-            }
-            break;
-            case SLINE:
-            {
-                printf("SLINE\n");
-                sLine_ptr sli = (sLine_ptr)scon->data;
-                printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
-            }
-            break;
-            case SARC:
-            {
-                printf("SARC\n");
-            }
-            break;
-            case SROUNDRECT:
-            {
-                printf("SROUNDRECT\n");
-            }
-            break;
-            }
-        }
-    }
+    // moveTo(ctx, 100, 200);
+    // lineTo(ctx, 150, 200);
+    // lineTo(ctx, 200, 100);
+    // lineTo(ctx, 250, 200);
+    // lineTo(ctx, 300, 200);
+    // lineTo(ctx, 200, 300);
+    // closePath(ctx);
 
-    printf("---------------------------\n");
+    moveTo(ctx, 10, 70);
+    lineTo(ctx, 130, 70);
+    lineTo(ctx, 40, 10);
+    lineTo(ctx, 70, 130);
+    lineTo(ctx, 100, 10);
+    lineTo(ctx, 10, 70);
 
     ctx->rgb888 = 0x0000FF;
-    fill(ctx);
+    fill(ctx, NONZERO);
     ctx->rgb888 = 0xFFFFFF;
     stroke(ctx);
+
+    // Iterator_ptr itor = newShaderInfoIterator(ctx);
+    // int curY;
+    // ShaderContainer_ptr scon = nullptr;
+    // while (!shaderInfoIterateEnd(itor))
+    // {
+    //     curY = currentShaderInfoItorY(itor);
+    //     scon = nextShaderContainer(itor);
+    //     printf("Y:%d\n", curY);
+    //     if (scon != nullptr)
+    //     {
+    //         switch (scon->TYPE)
+    //         {
+    //         case SPOINT_RGB888:
+    //         {
+    //             printf("SPOINT_RGB888\n");
+    //         }
+    //         case SPOINT_RGBA32:
+    //         {
+    //             printf("SPOINT_RGBA32\n");
+    //         }
+    //         break;
+    //         case FPOINT:
+    //         {
+    //             printf("FPOINT\n");
+    //         }
+    //         break;
+    //         case SLINE:
+    //         {
+    //             printf("SLINE\n");
+    //             sLine_ptr sli = (sLine_ptr)scon->data;
+    //             printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
+    //         }
+    //         break;
+    //         case SARC:
+    //         {
+    //             printf("SARC\n");
+    //         }
+    //         break;
+    //         case SROUNDRECT:
+    //         {
+    //             printf("SROUNDRECT\n");
+    //         }
+    //         break;
+    //         }
+    //     }
+    // }
+
+    // printf("---------------------------\n");
 
     write_display_memory_on();
 

@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <math.h>
 
 #include "../display/display_config.h"
 #include "../datamodel/data_model.h"
@@ -185,6 +186,7 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
 {
     // bool outAreaBound = outAreaBoundTruncated(&x, &y);
     int ax, ay, bx, by;
+    bool anticlockwise;
 
     //! Do test.
     scanLineRangeUpdate(hd, y);
@@ -198,6 +200,7 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
         ay = y;
         bx = hd->penx;
         by = hd->peny;
+        anticlockwise = true;
     }
     else
     {
@@ -207,9 +210,10 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
         ay = hd->peny;
         bx = x;
         by = y;
+        anticlockwise = false;
     }
 
-    writeSLine(hd->shaderInfo, ax, ay, bx, by, hd->antialiasing);
+    writeSLine(hd->shaderInfo, ax, ay, bx, by, hd->antialiasing, anticlockwise);
 
     hd->penx = x;
     hd->peny = y;
@@ -633,7 +637,7 @@ void stroke(CanvaHandle_ptr hd)
 
 // TODO: OPTIMITE THIS CODE BELOW
 // ? High effective flood fill algorithm reference from: http://www.williammalone.com/articles/html5-canvas-javascript-paint-bucket-tool/
-// enum FloodFillRepresentType
+// enum FloodFillRepresent_type
 // {
 //     BOUNDARY_COLOR = 0x00,      // Boundary representation color type
 //     OLD_SEED_POINT_COLOR = 0x01 // Or Interior dot representation color type
@@ -809,14 +813,19 @@ bool fill_compareFillNode(void *data1, void *data2)
     }
 
     return flLESSE(compare1, compare2);
-
-    // XET_ptr xetptr1 = (XET_ptr)data1;
-    // XET_ptr xetptr2 = (XET_ptr)data2;
-    // return xetptr1->ax <= xetptr2->ax;
 }
 
-void fill(CanvaHandle_ptr hd)
+void fill(CanvaHandle_ptr hd, ...)
 {
+    // Get the fill rule
+    va_list vaList = nullptr;
+    va_start(vaList, hd);
+    int fillRule = va_arg(vaList, int);
+    if (fillRule != NONZERO)
+        fillRule = EVENODD;
+    va_end(vaList);
+    printf("FILLRULE:%d\n", fillRule);
+
     // Prepare shader info
     ShaderStatus = stFILL;
     CurrentShaderInfo = hd->shaderInfo;
@@ -873,19 +882,19 @@ void fill(CanvaHandle_ptr hd)
             {
             case FPOINT:
             {
-                fn = newFillNode_point(scon->x, curY);
+                fn = newFillNode_point(scon->x, curY, scon->anticlockwise);
             }
             break;
             case SPOINT_RGBA32:
             {
                 sPointRGBA32_ptr sp = (sPointRGBA32_ptr)scon->data;
                 if (sp->keyPoint)
-                    fn = newFillNode_point(scon->x, curY);
+                    fn = newFillNode_point(scon->x, curY, scon->anticlockwise);
             }
             break;
             case SPOINT_RGB888:
             {
-                fn = newFillNode_point(scon->x, curY);
+                fn = newFillNode_point(scon->x, curY, scon->anticlockwise);
             }
             break;
             case SLINE:
@@ -894,7 +903,7 @@ void fill(CanvaHandle_ptr hd)
                 float tm = 0.f;
                 if (sli->y1 - (float)curY != 0.f)
                     tm = ((float)sli->x1 - (float)scon->x) / ((float)sli->y1 - (float)curY);
-                fn = newFillNode_line((float)scon->x, (float)sli->x1, (float)sli->y1, tm);
+                fn = newFillNode_line((float)scon->x, (float)sli->x1, (float)sli->y1, tm, sli->anticlockwise);
             }
             break;
             }
@@ -905,24 +914,24 @@ void fill(CanvaHandle_ptr hd)
         }
 
         //?TEST
-        // if (AET != nullptr)
-        // {
-        //     printf("Current AET:\n");
-        //     LinkList_ptr lla = AET;
-        //     for (;;)
-        //     {
-        //         FillNode_ptr fn = (FillNode_ptr)lla->data;
-        //         if (fn->TYPE == FN_LINE)
-        //         {
-        //             printf("%f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
-        //         }
-        //         if (lla->next != nullptr)
-        //             lla = lla->next;
-        //         else
-        //             break;
-        //     }
-        //     printf("------------\n");
-        // }
+        if (AET != nullptr)
+        {
+            printf("Current AET:\n");
+            LinkList_ptr lla = AET;
+            for (;;)
+            {
+                FillNode_ptr fn = (FillNode_ptr)lla->data;
+                if (fn->TYPE == FN_LINE)
+                {
+                    printf("%f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
+                }
+                if (lla->next != nullptr)
+                    lla = lla->next;
+                else
+                    break;
+            }
+            printf("------------\n");
+        }
 
         if (curYChanged)
         {
@@ -989,60 +998,116 @@ void fill(CanvaHandle_ptr hd)
 
             // Draw the pixel
             LinkList_ptr nodes = AET;
-            if (AET != nullptr)
+            if (nodes != nullptr)
             {
+                if (fillRule == NONZERO)
+                {
+                    printf("NONZERO RUN\n");
+                    int num = 0;
+                    int lastDrawPoint, curDrawPoint;
+                    FillNode_ptr fn = (FillNode_ptr)nodes->data;
+
+                    switch (fn->TYPE)
+                    {
+                    case FN_LINE:
+                        lastDrawPoint = (int)fn->ax + 1;
+                        break;
+                    case FN_POINT:
+                        lastDrawPoint = fn->x + 1;
+                        break;
+                    }
+                    if (!fn->anticlockwise)
+                        num++;
+                    else
+                        num--;
+                    nodes = readLinkListNode(nodes);
+
+                    while (nodes != nullptr)
+                    {
+                        fn = (FillNode_ptr)nodes->data;
+                        switch (fn->TYPE)
+                        {
+                        case FN_LINE:
+                            curDrawPoint = (int)fn->ax + 1;
+                            break;
+                        case FN_POINT:
+                            curDrawPoint = fn->x + 1;
+                            break;
+                        }
+
+                        // Draw
+                        if (num != 0)
+                        {
+                            for (int drawX = lastDrawPoint; drawX <= curDrawPoint; drawX++)
+                            {
+                                IDM_writeColor(drawX, curY, colorH8b, colorL8b);
+                            }
+                        }
+
+                        if (!fn->anticlockwise)
+                            num++;
+                        else
+                            num--;
+                        lastDrawPoint = curDrawPoint;
+                        nodes = readLinkListNode(nodes);
+                    }
+                }
+                else
+                {
+                    // EVENODD
+                    while (nodes != nullptr)
+                    {
+                        int drawBegin, drawEnd;
+
+                        FillNode_ptr fnBegin = (FillNode_ptr)nodes->data;
+                        switch (fnBegin->TYPE)
+                        {
+                        case FN_LINE:
+                            drawBegin = (int)fnBegin->ax + 1;
+                            break;
+                        case FN_POINT:
+                            drawBegin = fnBegin->x + 1;
+                            break;
+                        }
+
+                        // Read next node
+                        nodes = readLinkListNode(nodes);
+                        if (nodes == nullptr)
+                            break;
+
+                        FillNode_ptr fnEnd = (FillNode_ptr)nodes->data;
+                        switch (fnEnd->TYPE)
+                        {
+                        case FN_LINE:
+                            drawEnd = (int)fnEnd->ax;
+                            break;
+                        case FN_POINT:
+                            drawEnd = fnEnd->x;
+                            break;
+                        }
+                        printf("ANTICLOCKWISE:%d\n", fnEnd->anticlockwise);
+
+                        printf("%d %d\n", drawBegin, drawEnd);
+
+                        // Draw
+                        for (int drawX = drawBegin; drawX <= drawEnd; drawX++)
+                        {
+                            IDM_writeColor(drawX, curY, colorH8b, colorL8b);
+                        }
+
+                        nodes = readLinkListNode(nodes);
+                    }
+                }
+
+                // Update the AET nodes
+                nodes = AET;
                 while (nodes != nullptr)
                 {
-                    int drawBegin, drawEnd;
-
-                    FillNode_ptr fnBegin = (FillNode_ptr)nodes->data;
-                    switch (fnBegin->TYPE)
-                    {
-                    case FN_LINE:
-                        drawBegin = (int)fnBegin->ax + 1;
-                        break;
-                    case FN_POINT:
-                        drawBegin = fnBegin->x + 1;
-                        break;
-                    }
-
-                    // Read next node
-                    nodes = readLinkListNode(nodes);
-                    if (nodes == nullptr)
-                        break;
-
-                    FillNode_ptr fnEnd = (FillNode_ptr)nodes->data;
-                    switch (fnEnd->TYPE)
-                    {
-                    case FN_LINE:
-                        drawEnd = (int)fnEnd->ax;
-                        break;
-                    case FN_POINT:
-                        drawEnd = fnEnd->x;
-                        break;
-                    }
-
-                    printf("%d %d\n", drawBegin, drawEnd);
-
-                    // Draw
-                    int drawY = curY;
-                    for (int drawX = drawBegin; drawX < drawEnd; drawX++)
-                    {
-                        IDM_writeColor(drawX, drawY, colorH8b, colorL8b);
-                    }
-
+                    FillNode_ptr fn = (FillNode_ptr)nodes->data;
+                    if (fn->TYPE == FN_LINE)
+                        fn->ax += fn->tm;
                     nodes = readLinkListNode(nodes);
                 }
-            }
-
-            // Update the AET nodes
-            nodes = AET;
-            while (nodes != nullptr)
-            {
-                FillNode_ptr fn = (FillNode_ptr)nodes->data;
-                if (fn->TYPE == FN_LINE)
-                    fn->ax += fn->tm;
-                nodes = readLinkListNode(nodes);
             }
         }
     }
@@ -1055,7 +1120,7 @@ void fill(CanvaHandle_ptr hd)
     ShaderStatus = stSTROKE;
 }
 
-void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
+void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise)
 {
     // Color
     uint16_t color = RGB888_to_RGB565(hd->rgb888);
@@ -1085,14 +1150,14 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
         break;
         case stFILL:
         {
-            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y);
-            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y);
-            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y);
-            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y);
-            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y);
-            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y);
-            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y);
-            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y);
+            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y, anticlockwise);
+            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y, anticlockwise);
         }
         break;
         }
@@ -1110,73 +1175,66 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius)
     }
 };
 
+void arcDrawFP(int arcId, int drawX, int drawY, int x, int y, bool anticlockwise)
+{
+    switch (arcId)
+    {
+    case 0:
+        writeFPoint(CurrentShaderInfo, drawX + x, drawY + y, anticlockwise);
+        break;
+    case 4:
+        writeFPoint(CurrentShaderInfo, drawY + x, drawX + y, anticlockwise);
+        break;
+    case 6:
+        writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y, anticlockwise);
+        break;
+    case 2:
+        writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y, anticlockwise);
+        break;
+    case 3:
+        writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y, anticlockwise);
+        break;
+    case 7:
+        writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y, anticlockwise);
+        break;
+    case 5:
+        writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y, anticlockwise);
+        break;
+    case 1:
+        writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y, anticlockwise);
+        break;
+    }
+}
+
 // HINT: Not a API Function. This Function Called by arc() Only.
 void arcDraw(int arcId, int drawX, int drawY, int x, int y, uint8_t colorH8b, uint8_t colorL8b)
 {
-    switch (ShaderStatus)
+    switch (arcId)
     {
-    case stSTROKE:
-    {
-        switch (arcId)
-        {
-        case 0:
-            IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
-            break;
-        case 4:
-            IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
-            break;
-        case 6:
-            IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
-            break;
-        case 2:
-            IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
-            break;
-        case 3:
-            IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
-            break;
-        case 7:
-            IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
-            break;
-        case 5:
-            IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
-            break;
-        case 1:
-            IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
-            break;
-        }
-    }
-    break;
-    case stFILL:
-    {
-        switch (arcId)
-        {
-        case 0:
-            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y);
-            break;
-        case 4:
-            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y);
-            break;
-        case 6:
-            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y);
-            break;
-        case 2:
-            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y);
-            break;
-        case 3:
-            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y);
-            break;
-        case 7:
-            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y);
-            break;
-        case 5:
-            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y);
-            break;
-        case 1:
-            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y);
-            break;
-        }
-    }
-    break;
+    case 0:
+        IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
+        break;
+    case 4:
+        IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
+        break;
+    case 6:
+        IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
+        break;
+    case 2:
+        IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
+        break;
+    case 3:
+        IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
+        break;
+    case 7:
+        IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
+        break;
+    case 5:
+        IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
+        break;
+    case 1:
+        IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
+        break;
     }
 }
 // HINT: Not a API Function. This Function Called by arc() Only.
@@ -1223,9 +1281,11 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
     // Judge to draw the circle or arc.
     if (flGREATE(fabs(startAngle - endAngle), 2.f * PI))
     {
-        drawCircle(hd, x, y, radius);
+        drawCircle(hd, x, y, radius, anticlockwise);
         return;
     }
+
+    bool originanticlockwise = anticlockwise;
 
     // Swap if anticloskwise
     if (anticlockwise)
@@ -1291,16 +1351,30 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
             {
                 bool checker1 = arcDrawBorderChecker(arcId, drawX, drawY, startDrawPointX, startDrawPointY);
                 if (checker1)
-                    arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
+                    goto drawarc;
             }
             else if (i == arcCount - 1)
             {
                 bool checker2 = arcDrawBorderChecker(arcId, drawX, drawY, endDrawPointX, endDrawPointY);
                 if (!checker2)
-                    arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
+                    goto drawarc;
             }
             else
-                arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
+                goto drawarc;
+
+            while (false)
+            {
+            drawarc:
+                switch (ShaderStatus)
+                {
+                case stSTROKE:
+                    arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
+                    break;
+                case stFILL:
+                    arcDrawFP(arcId, drawX, drawY, x, y, originanticlockwise);
+                    break;
+                }
+            }
         }
 
         if (d >= 0)

@@ -91,16 +91,20 @@ void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1);
 void strokeLineAA(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1);
 void stroke(CanvaHandle_ptr hdl);
 
-enum FloodFillRepresentType
+enum FloodFillRepresent_type
 {
     BOUNDARY_COLOR = 0x00,      // Boundary representation color type
     OLD_SEED_POINT_COLOR = 0x01 // Or Interior dot representation color type
 };
 void floodFill(int type, int seedX, int seedY, RGB888 typeColor, RGB888 fillColor);
-void scanlineFill(CanvaHandle_ptr hdl);
-void fill(CanvaHandle_ptr hdl);
+enum FillRule_type
+{
+    NONZERO,
+    EVENODD
+};
+void fill(CanvaHandle_ptr hdl, ...);
 
-void drawCircle(CanvaHandle_ptr phd, int x, int y, int radius);
+void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise);
 void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 // void arcInstanceAA(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 void arc(CanvaHandle_ptr phd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
