@@ -8,6 +8,7 @@
 #include "canvas.h"
 
 // * Shader status info
+Subpath_id CurrentSubpathID = 0;
 uint8_t ShaderStatus = stSTROKE;
 LinkList_ptr *CurrentShaderInfo = nullptr;
 
@@ -119,6 +120,7 @@ ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *da
     scon->y = y;
     scon->TYPE = containerType;
     scon->data = data;
+    scon->subpathID = CurrentSubpathID;
     return scon;
 }
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
@@ -126,36 +128,6 @@ ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
     releaser(pt->data);
     return (ShaderContainer_ptr)releaser(pt);
 };
-
-//* For Fill use
-FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise)
-{
-    FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
-    pt->TYPE = FN_LINE;
-    pt->ax = ax;
-    pt->bx = bx;
-    pt->by = by;
-    pt->tm = tm;
-    pt->anticlockwise = anticlockwise;
-    return pt;
-}
-
-FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise)
-{
-    FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
-    pt->TYPE = FN_POINT;
-    pt->x = x;
-    pt->y = y;
-    pt->anticlockwise = anticlockwise;
-    return pt;
-}
-
-void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise)
-{
-    ShaderContainer_ptr scon = newShaderContainer(x, y, FPOINT, nullptr);
-    scon->anticlockwise = anticlockwise;
-    shaderInfo[y] = newLinkListNode(shaderInfo[y], (void *)scon);
-}
 
 //* Point RGBA32
 ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha)
@@ -215,9 +187,50 @@ ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height,
     return newShaderContainer(x, y, SROUNDRECT, (void *)pt);
 }
 
+//* For Fill use
+FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise)
+{
+    FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
+    pt->TYPE = FN_LINE;
+    pt->ax = ax;
+    pt->bx = bx;
+    pt->by = by;
+    pt->tm = tm;
+    pt->anticlockwise = anticlockwise;
+    return pt;
+}
+
+FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise)
+{
+    FillNode_ptr pt = (FillNode_ptr)malloc(sizeof(FillNode_t));
+    pt->TYPE = FN_POINT;
+    pt->x = x;
+    pt->y = y;
+    pt->anticlockwise = anticlockwise;
+    return pt;
+}
+
+void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise)
+{
+    ShaderContainer_ptr scon = newShaderContainer(x, y, FPOINT, nullptr);
+    scon->anticlockwise = anticlockwise;
+    shaderInfo[y] = newLinkListNode(shaderInfo[y], (void *)scon);
+}
+
+void writeFLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool anticlockwise)
+{
+    sLine_ptr pt = nullptr;
+    pt = (sLine_ptr)malloc(sizeof(sLine_t));
+    pt->x1 = x1;
+    pt->y1 = y1;
+    pt->anticlockwise = anticlockwise;
+    ShaderContainer_ptr scon = newShaderContainer(x0, y0, FLINE, (void *)pt);
+    shaderInfo[y0] = newLinkListNode(shaderInfo[y0], (void *)scon);
+}
+
 //* Write to shader buffer API
 // HINT Except point and line container, don't need to give value y,
-// HINT so you can remove it if necessary to increase efficiency a little.
+// HINT so you can remove it if necessary to improve efficiency a little bit.
 bool shaderPointCompare(void *data1, void *data2)
 {
     ShaderContainer_ptr scon1 = (ShaderContainer_ptr)data1;

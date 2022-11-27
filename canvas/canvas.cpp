@@ -59,6 +59,39 @@ void movePen(CanvaHandle_ptr hd, int penx, int peny)
     hd->peny = peny;
 }
 
+bool outAreaboundTruncated(int *penx, int *peny)
+{
+    bool outAreaBound = false;
+    int x = *penx, y = *peny;
+
+    if (x < 0)
+    {
+        outAreaBound = true;
+        x = 0;
+    }
+    else if (x > DISPLAY_WIDTH - 1)
+    {
+        outAreaBound = true;
+        x = DISPLAY_WIDTH - 1;
+    }
+
+    if (y < 0)
+    {
+        outAreaBound = true;
+        y = 0;
+    }
+    else if (y > DISPLAY_HEIGHT - 1)
+    {
+        outAreaBound = true;
+        y = DISPLAY_HEIGHT - 1;
+    }
+
+    *penx = x;
+    *peny = y;
+
+    return outAreaBound;
+};
+
 //! BUG: 在被line调用时 可以进行优化
 bool scanLineRangeUpdate(CanvaHandle_ptr hd, int y)
 {
@@ -107,47 +140,6 @@ CanvaHandle_ptr releaseCanva(CanvaHandle_ptr canva)
 
 // * Canvas Functions
 
-// // HINT: Not a API Function. This function called by lineTo() only.
-// bool compareET_lineTo(void *data1, void *data2)
-// {
-//     XET_ptr xetptr1 = (XET_ptr)data1;
-//     XET_ptr xetptr2 = (XET_ptr)data2;
-//     return xetptr1->by < xetptr2->by;
-// }
-
-bool outAreaBoundTruncated(int *px, int *py)
-{
-    bool outAreaBound = false;
-    int x = *px, y = *py;
-
-    if (x < 0)
-    {
-        outAreaBound = true;
-        x = 0;
-    }
-    else if (x > DISPLAY_WIDTH - 1)
-    {
-        outAreaBound = true;
-        x = DISPLAY_WIDTH - 1;
-    }
-
-    if (y < 0)
-    {
-        outAreaBound = true;
-        y = 0;
-    }
-    else if (y > DISPLAY_HEIGHT - 1)
-    {
-        outAreaBound = true;
-        y = DISPLAY_HEIGHT - 1;
-    }
-
-    *px = x;
-    *py = y;
-
-    return outAreaBound;
-};
-
 // TODO: 写警告或错误返回
 void beginPath(CanvaHandle_ptr hd)
 {
@@ -161,6 +153,8 @@ void beginPath(CanvaHandle_ptr hd)
         hd->peny = 0;
         hd->apiCalled = false;
         hd->antialiasing = true;
+        hd->needNewSubpath = true;
+        hd->subpathID = 0;
         hd->beginPenx = 0;
         hd->beginPeny = 0;
         hd->scanLineMin = DISPLAY_HEIGHT - 1;
@@ -172,19 +166,77 @@ void beginPath(CanvaHandle_ptr hd)
     }
 };
 
+void checkAndCloseCurrentSubpath(CanvaHandle_ptr hd)
+{
+    // Check current subpath and if path not closed,
+    // add FLine from begin coordinate to current pen coordinate for filling purpose
+    if (hd->penx != hd->beginPenx || hd->peny != hd->beginPeny)
+    {
+        printf("SUBPATH NOT CLOSE\n");
+        int ax, ay, bx, by;
+        bool anticlockwise;
+
+        //! Do test.
+        scanLineRangeUpdate(hd, hd->beginPeny);
+        scanLineRangeUpdate(hd, hd->peny);
+
+        if (hd->peny > hd->beginPeny)
+        {
+            // hd->scanLineMin = y < hd->scanLineMin ? y : hd->scanLineMin;
+            // hd->scanLineMax = hd->peny > hd->scanLineMax ? hd->peny : hd->scanLineMax;
+            ax = hd->beginPenx;
+            ay = hd->beginPeny;
+            bx = hd->penx;
+            by = hd->peny;
+            anticlockwise = true;
+        }
+        else
+        {
+            // hd->scanLineMin = hd->peny < hd->scanLineMin ? hd->peny : hd->scanLineMin;
+            // hd->scanLineMax = y > hd->scanLineMax ? y : hd->scanLineMax;
+            ax = hd->penx;
+            ay = hd->peny;
+            bx = hd->beginPenx;
+            by = hd->beginPeny;
+            anticlockwise = false;
+        }
+
+        CurrentSubpathID = hd->subpathID;
+        writeFLine(hd->shaderInfo, ax, ay, bx, by, anticlockwise);
+    }
+}
+
 void moveTo(CanvaHandle_ptr hd, int x, int y)
 {
-    // bool outAreaBound = outAreaBoundTruncated(&x, &y);
+    // TODO: This limitation is temporary,
+    // TODO: it unfollow HTML standard and will reconstruct in future.
+    bool outAreaBound = outAreaboundTruncated(&x, &y);
+
+    checkAndCloseCurrentSubpath(hd);
+
     hd->penx = x;
     hd->peny = y;
     hd->beginPenx = x;
     hd->beginPeny = y;
+
     hd->apiCalled = true;
+
+    hd->subpathID++;
+    hd->needNewSubpath = false;
 };
 
 void lineTo(CanvaHandle_ptr hd, int x, int y)
 {
-    // bool outAreaBound = outAreaBoundTruncated(&x, &y);
+    // TODO: This limitation is temporary,
+    // TODO: it unfollow HTML standard and will reconstruct in future.
+    bool outAreaBound = outAreaboundTruncated(&x, &y);
+
+    if (hd->needNewSubpath)
+    {
+        moveTo(hd, x, y);
+        return;
+    }
+
     int ax, ay, bx, by;
     bool anticlockwise;
 
@@ -213,10 +265,14 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
         anticlockwise = false;
     }
 
+    CurrentSubpathID = hd->subpathID;
     writeSLine(hd->shaderInfo, ax, ay, bx, by, hd->antialiasing, anticlockwise);
 
     hd->penx = x;
     hd->peny = y;
+
+    if (hd->beginPenx == x && hd->beginPeny == y)
+        moveTo(hd, x, y);
 };
 
 // HINT: Not a API Function.
@@ -826,7 +882,11 @@ void fill(CanvaHandle_ptr hd, ...)
     va_end(vaList);
     printf("FILLRULE:%d\n", fillRule);
 
-    // Prepare shader info
+    // Close current subpath
+    checkAndCloseCurrentSubpath(hd);
+
+    // Prepare shader status info
+    CurrentSubpathID = hd->subpathID;
     ShaderStatus = stFILL;
     CurrentShaderInfo = hd->shaderInfo;
 
@@ -898,6 +958,7 @@ void fill(CanvaHandle_ptr hd, ...)
             }
             break;
             case SLINE:
+            case FLINE:
             {
                 sLine_ptr sli = (sLine_ptr)scon->data;
                 float tm = 0.f;
@@ -1002,7 +1063,6 @@ void fill(CanvaHandle_ptr hd, ...)
             {
                 if (fillRule == NONZERO)
                 {
-                    printf("NONZERO RUN\n");
                     int num = 0;
                     int lastDrawPoint, curDrawPoint;
                     FillNode_ptr fn = (FillNode_ptr)nodes->data;
@@ -1069,7 +1129,6 @@ void fill(CanvaHandle_ptr hd, ...)
                             drawBegin = fnBegin->x + 1;
                             break;
                         }
-
                         // Read next node
                         nodes = readLinkListNode(nodes);
                         if (nodes == nullptr)
@@ -1085,9 +1144,6 @@ void fill(CanvaHandle_ptr hd, ...)
                             drawEnd = fnEnd->x;
                             break;
                         }
-                        printf("ANTICLOCKWISE:%d\n", fnEnd->anticlockwise);
-
-                        printf("%d %d\n", drawBegin, drawEnd);
 
                         // Draw
                         for (int drawX = drawBegin; drawX <= drawEnd; drawX++)

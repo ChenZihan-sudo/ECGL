@@ -80,12 +80,32 @@ int simECGL_main()
     // lineTo(ctx, 200, 300);
     // closePath(ctx);
 
-    moveTo(ctx, 10, 70);
-    lineTo(ctx, 130, 70);
-    lineTo(ctx, 40, 10);
-    lineTo(ctx, 70, 130);
-    lineTo(ctx, 100, 10);
-    lineTo(ctx, 10, 70);
+    // 五角星
+    //  moveTo(ctx, 10, 70);
+    //  lineTo(ctx, 130, 70);
+    //  lineTo(ctx, 40, 10);
+    //  lineTo(ctx, 70, 130);
+    //  lineTo(ctx, 100, 10);
+    //  lineTo(ctx, 10, 70);
+
+    moveTo(ctx, 100, 100);
+    lineTo(ctx, 200, 200);
+    lineTo(ctx, 300, 200);
+    lineTo(ctx, 250, 150);
+    lineTo(ctx, 150, 300);
+    lineTo(ctx, 100, 100);
+
+    lineTo(ctx, 60, 200);
+    lineTo(ctx, 300, 499);
+    closePath(ctx);
+
+    moveTo(ctx, 100, 10);
+    lineTo(ctx, 50, 80);
+    lineTo(ctx, 100, 100);
+    lineTo(ctx, 100, 10); //=> equival to lineTo
+
+    lineTo(ctx, 50, 30);
+    lineTo(ctx, 100, 100);
 
     ctx->rgb888 = 0x0000FF;
     fill(ctx, NONZERO);

@@ -22,6 +22,7 @@ struct XET
 //* Canvas Main Structure
 typedef struct CanvaHandle CanvaHandle_t;
 typedef struct CanvaHandle *CanvaHandle_ptr;
+typedef int Subpath_id;
 struct CanvaHandle
 {
     int lineWidth;
@@ -43,10 +44,17 @@ struct CanvaHandle
     int beginPenx;
     int beginPeny;
 
+    Subpath_id subpathID;
     LinkList_ptr *shaderInfo; // Store the shaderContainer info.
 
-    bool apiCalled;    // Tag: whether api function called first time.
-    bool antialiasing; // Tag: whether enable antialising
+    // Flag: when this flag is set, will enable antialising
+    // if the display device support grayscale display.
+    bool antialiasing;
+    // ? Flag: whether api function called first time.
+    bool apiCalled;
+    // Flag: when this flag is set, certain APIs create a new subpath
+    // rather than extending the previous one.
+    bool needNewSubpath;
 
     size_t scanLineMin;
     size_t scanLineMax;
@@ -61,6 +69,7 @@ CanvaHandle_ptr releaseCanva(CanvaHandle_ptr canva);
 bool setBeginPoint(CanvaHandle_ptr hdl, int beginPenx, int beginPeny);
 void movePen(CanvaHandle_ptr hdl, int penx, int peny);
 bool scanLineRangeUpdate(CanvaHandle_ptr hdl, int y);
+bool outAreaboundTruncated(int *penx, int *peny);
 
 //* Point
 typedef struct Point Point_t;

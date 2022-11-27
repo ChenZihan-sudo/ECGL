@@ -5,27 +5,30 @@
 
 //* Shader system
 
-//* Shader status group
+//* Shader status info
+extern Subpath_id CurrentSubpathID;
+extern uint8_t ShaderStatus;
+extern LinkList_ptr *CurrentShaderInfo;
 enum ShaderStatus_type
 {
     stSTROKE,
     stFILL
 };
-extern uint8_t ShaderStatus;
-extern LinkList_ptr *CurrentShaderInfo;
 
 typedef struct ShaderContainer ShaderContainer_t;
 typedef struct ShaderContainer *ShaderContainer_ptr;
 struct ShaderContainer
 {
+    Subpath_id subpathID;
     int x;
     int y;
     int TYPE;
-    void *data;
 
     // For FPOINT use
-    bool filled;
     bool anticlockwise;
+    bool filled;
+
+    void *data;
 };
 ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
@@ -38,39 +41,12 @@ enum ShaderContainer_type
 
     // For filling use
     FPOINT,
+    FLINE,
 
     // Need resolve to points when fill
     SARC,
     SROUNDRECT,
 };
-
-//* For Fill use
-typedef struct FillNode FillNode_t;
-typedef struct FillNode *FillNode_ptr;
-enum FillNode_type
-{
-    FN_LINE,
-    FN_POINT
-};
-struct FillNode
-{
-    uint8_t TYPE;
-
-    // For FN_LINE use
-    float ax;
-    float bx;
-    float by;
-    float tm;
-
-    // For FN_POINT use
-    int x;
-    int y;
-
-    bool anticlockwise; // For NONZERO use
-};
-FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise);
-FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise);
-void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise);
 
 //* Iterator
 enum IteratorType
@@ -149,6 +125,35 @@ struct sRoundRect
 };
 ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height,
                                   int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing);
+
+//* For Fill use
+typedef struct FillNode FillNode_t;
+typedef struct FillNode *FillNode_ptr;
+enum FillNode_type
+{
+    FN_LINE,
+    FN_POINT
+};
+struct FillNode
+{
+    uint8_t TYPE;
+
+    // For FN_LINE use
+    float ax;
+    float bx;
+    float by;
+    float tm;
+
+    // For FN_POINT use
+    int x;
+    int y;
+
+    bool anticlockwise; // For NONZERO use
+};
+FillNode_ptr newFillNode_line(float ax, float bx, float by, float tm, bool anticlockwise);
+FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise);
+void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise);
+void writeFLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool anticlockwise);
 
 //* Write to shader buffer API
 bool shaderPointCompare(void *data1, void *data2);

@@ -17,7 +17,7 @@
 
 // Define display width and height here.
 #define DISPLAY_WIDTH 500
-#define DISPLAY_HEIGHT 400
+#define DISPLAY_HEIGHT 500
 
 // SPI D/CX MODE
 #define SPI_COMMAND_MODE 0
