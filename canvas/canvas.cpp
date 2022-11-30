@@ -98,13 +98,13 @@ bool scanLineRangeUpdate(CanvaHandle_ptr hd, int y)
     if (y < hd->scanLineMin)
     {
         hd->scanLineMin = y;
-        printf("[D] scanLineMin be set to %d\n", hd->scanLineMin);
+        // printf("[D] scanLineMin be set to %d\n", hd->scanLineMin);
         return true;
     }
     else if (y > hd->scanLineMax)
     {
         hd->scanLineMax = y;
-        printf("[D] scanLineMax be set to %d\n", hd->scanLineMax);
+        // printf("[D] scanLineMax be set to %d\n", hd->scanLineMax);
         return true;
     }
 
@@ -172,7 +172,7 @@ void checkAndCloseCurrentSubpath(CanvaHandle_ptr hd)
     // add FLine from begin coordinate to current pen coordinate for filling purpose
     if (hd->penx != hd->beginPenx || hd->peny != hd->beginPeny)
     {
-        printf("SUBPATH NOT CLOSE\n");
+        // printf("SUBPATH NOT CLOSE\n");
         int ax, ay, bx, by;
         bool anticlockwise;
 
@@ -672,7 +672,7 @@ void stroke(CanvaHandle_ptr hd)
                 // else
 
                 arcInstance(hd, scon->x, curY, sarc->radius,
-                            sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
+                            sarc->startAngle, sarc->endAngle, scon->anticlockwise);
             }
             break;
             case SROUNDRECT:
@@ -691,7 +691,7 @@ void stroke(CanvaHandle_ptr hd)
     }
 };
 
-// TODO: OPTIMITE THIS CODE BELOW
+// TODO: OPTIMITE THIS CODE AS FOLLOW
 // ? High effective flood fill algorithm reference from: http://www.williammalone.com/articles/html5-canvas-javascript-paint-bucket-tool/
 // enum FloodFillRepresent_type
 // {
@@ -880,7 +880,7 @@ void fill(CanvaHandle_ptr hd, ...)
     if (fillRule != NONZERO)
         fillRule = EVENODD;
     va_end(vaList);
-    printf("FILLRULE:%d\n", fillRule);
+    // printf("FILLRULE:%d\n", fillRule);
 
     // Close current subpath
     checkAndCloseCurrentSubpath(hd);
@@ -915,7 +915,14 @@ void fill(CanvaHandle_ptr hd, ...)
             sArc_ptr sarc = (sArc_ptr)scon->data;
 
             arcInstance(hd, scon->x, curY, sarc->radius,
-                        sarc->startAngle, sarc->endAngle, sarc->anticlockwise);
+                        sarc->startAngle, sarc->endAngle, scon->anticlockwise);
+        }
+        break;
+        case SROUNDRECT:
+        {
+            sRoundRect_ptr srrect = (sRoundRect_ptr)scon->data;
+            roundRectInstance(hd, scon->x, curY, srrect->width, srrect->height,
+                              srrect->topLeft, srrect->topRight, srrect->bottomRight, srrect->bottomLeft);
         }
         break;
         }
@@ -932,7 +939,7 @@ void fill(CanvaHandle_ptr hd, ...)
         scon = nextShaderContainer(itor);
         curYChanged = currentShaderInfoItorYChanged(itor);
 
-        printf("curY:%d\n", curY);
+        // printf("curY:%d\n", curY);
 
         if (scon != nullptr)
         {
@@ -964,7 +971,7 @@ void fill(CanvaHandle_ptr hd, ...)
                 float tm = 0.f;
                 if (sli->y1 - (float)curY != 0.f)
                     tm = ((float)sli->x1 - (float)scon->x) / ((float)sli->y1 - (float)curY);
-                fn = newFillNode_line((float)scon->x, (float)sli->x1, (float)sli->y1, tm, sli->anticlockwise);
+                fn = newFillNode_line((float)scon->x, (float)sli->x1, (float)sli->y1, tm, scon->anticlockwise);
             }
             break;
             }
@@ -974,25 +981,25 @@ void fill(CanvaHandle_ptr hd, ...)
                 AET = newLinkListNode(AET, (void *)fn);
         }
 
-        //?TEST
-        if (AET != nullptr)
-        {
-            printf("Current AET:\n");
-            LinkList_ptr lla = AET;
-            for (;;)
-            {
-                FillNode_ptr fn = (FillNode_ptr)lla->data;
-                if (fn->TYPE == FN_LINE)
-                {
-                    printf("%f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
-                }
-                if (lla->next != nullptr)
-                    lla = lla->next;
-                else
-                    break;
-            }
-            printf("------------\n");
-        }
+        // //?TEST
+        // if (AET != nullptr)
+        // {
+        //     printf("Current AET:\n");
+        //     LinkList_ptr lla = AET;
+        //     for (;;)
+        //     {
+        //         FillNode_ptr fn = (FillNode_ptr)lla->data;
+        //         if (fn->TYPE == FN_LINE)
+        //         {
+        //             printf("%f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
+        //         }
+        //         if (lla->next != nullptr)
+        //             lla = lla->next;
+        //         else
+        //             break;
+        //     }
+        //     printf("------------\n");
+        // }
 
         if (curYChanged)
         {
@@ -1014,7 +1021,7 @@ void fill(CanvaHandle_ptr hd, ...)
                     {
                         if (fn->y < curY)
                         {
-                            printf("Delete Point %d %d\n", fn->x, fn->y);
+                            // printf("Delete Point %d %d\n", fn->x, fn->y);
                             goto deleteNode;
                         }
                     }
@@ -1023,7 +1030,7 @@ void fill(CanvaHandle_ptr hd, ...)
                     {
                         if (fn->by <= (float)curY)
                         {
-                            printf("Delete LINE %f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
+                            // printf("Delete LINE %f %d %f %f\n", fn->ax, (int)curY, fn->bx, fn->by);
                             goto deleteNode;
                         }
                     }
@@ -1171,7 +1178,7 @@ void fill(CanvaHandle_ptr hd, ...)
     // Clean up memory fragments if necessary.
     if (AET != nullptr)
     {
-        printf("Fragments!!!\n");
+        // printf("Fragments!!!\n");
     }
     ShaderStatus = stSTROKE;
 }
@@ -1464,7 +1471,7 @@ void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float e
     else
         connectLine(hd, x + startDrawPointX, y + startDrawPointY);
 
-    writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, anticlockwise, hd->antialiasing);
+    writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, hd->antialiasing, anticlockwise);
 
     // ! Do test.
     scanLineRangeUpdate(hd, y);
@@ -1487,7 +1494,7 @@ void closePath(CanvaHandle_ptr hd)
 {
     if (!(hd->penx == hd->beginPenx && hd->peny == hd->beginPeny))
     {
-        printf("close: %d %d\n", hd->beginPenx, hd->beginPeny);
+        // printf("close: %d %d\n", hd->beginPenx, hd->beginPeny);
         lineTo(hd, hd->beginPenx, hd->beginPeny);
     }
 }

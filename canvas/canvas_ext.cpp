@@ -6,58 +6,85 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <math.h>
 
 #include "../display/display_config.h"
 #include "canvas_shader.h"
 #include "canvas.h"
 #include "canvas_ext.h"
+#include "canvas_err.h"
 //}
 
-// TODO 存在问题，见MDN标准Canvas: roundRect()
-
-canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, int radiiCount, int *radii)
+// Swap
+void swapi(int *a, int *b)
 {
-    // all-corners
+    int c = *a;
+    *a = *b;
+    *b = c;
+}
+
+void swapf(float *a, float *b)
+{
+    float c = *a;
+    *a = *b;
+    *b = c;
+}
+
+canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, int radiiCount, ...)
+{
+    if (!(0 < radiiCount && radiiCount <= 4))
+        return CANVAS_FAIL_DATA_UNVALID;
+
+    // Get the radii
+    va_list vaList = nullptr;
+    va_start(vaList, radiiCount);
+    int radii[4] = {0};
+    for (size_t i = 0; i < 4; i++)
+        if ((radii[i] = va_arg(vaList, int)) < 0)
+            return CANVAS_FAIL_DATA_UNVALID;
+    va_end(vaList);
+
+    int upperLeft = 0, upperRight = 0, lowerRight = 0, lowerLeft = 0;
+
+    // [top-left-and-bottom-right-and-top-right-and-bottom-left]
     // [top-left-and-bottom-right, top-right-and-bottom-left]
     // [top-left, top-right-and-bottom-left, bottom-right]
     // [top-left, top-right, bottom-right, bottom-left]
-    int topLeft = 0, topRight = 0, bottomRight = 0, bottomLeft = 0;
-
     switch (radiiCount)
     {
     case 0:
         break;
     case 1:
     {
-        topLeft = radii[0];
-        topRight = radii[0];
-        bottomRight = radii[0];
-        bottomLeft = radii[0];
+        upperLeft = radii[0];
+        upperRight = radii[0];
+        lowerRight = radii[0];
+        lowerLeft = radii[0];
     }
     break;
     case 2:
     {
-        topLeft = radii[0];
-        topRight = radii[1];
-        bottomRight = radii[0];
-        bottomLeft = radii[1];
+        upperLeft = radii[0];
+        lowerRight = radii[0];
+        upperRight = radii[1];
+        lowerLeft = radii[1];
     }
     break;
     case 3:
     {
-        topLeft = radii[0];
-        topRight = radii[1];
-        bottomRight = radii[2];
-        bottomLeft = radii[1];
+        upperLeft = radii[0];
+        upperRight = radii[1];
+        lowerLeft = radii[1];
+        lowerRight = radii[2];
     }
     break;
     case 4:
     {
-        topLeft = radii[0];
-        topRight = radii[1];
-        bottomRight = radii[2];
-        bottomLeft = radii[3];
+        upperLeft = radii[0];
+        upperRight = radii[1];
+        lowerRight = radii[2];
+        lowerLeft = radii[3];
     }
     break;
     default:
@@ -65,52 +92,86 @@ canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, 
         break;
     }
 
+    // If width or height is negative, turn over the roundrect.
+    if (height < 0)
+    {
+        y += height;
+        printf("|%d %d\n", upperLeft, lowerLeft);
+        swapi(&upperLeft, &lowerLeft);
+        printf("|%d %d\n", upperLeft, lowerLeft);
+        swapi(&upperRight, &lowerRight);
+        height = -height;
+    }
+
+    if (width < 0)
+    {
+        x += width;
+        swapi(&upperLeft, &upperRight);
+        swapi(&lowerLeft, &lowerRight);
+        width = -width;
+    }
+
+    // Corner curves must not overlap.
+    int top = upperLeft + upperRight;
+    int right = upperRight + lowerRight;
+    int bottom = lowerRight + lowerLeft;
+    int left = upperLeft + lowerLeft;
+
+    // Let scale be the minimum value of the ratios w / top, h / right, w / bottom, h / left.
+    float scale = width / (float)top;
+    float v = height / (float)right;
+    if (flLESS(v, scale))
+        scale = v;
+    v = width / (float)bottom;
+    if (flLESS(v, scale))
+        scale = v;
+    v = height / (float)left;
+    if (flLESS(v, scale))
+        scale = v;
+
+    printf("scale:%f\n", scale);
+
+    // If scale is less than 1, then set the x and y members of upperLeft, upperRight, lowerLeft, and lowerRight
+    // to their current values multiplied by scale.
+    if (flLESS(scale, 1.f))
+    {
+        upperLeft = (float)upperLeft * scale;
+        upperRight = (float)upperRight * scale;
+        lowerLeft = (float)lowerLeft * scale;
+        lowerRight = (float)lowerRight * scale;
+    }
+
     // ! Do test.
     scanLineRangeUpdate(hd, y);
 
-    // ! Uncertain border radius
-    // Priority 1>2>3>4
-    int maxLimit = width > height ? height : width;
-    topLeft = maxLimit < topLeft ? maxLimit : topLeft;
-    topRight = maxLimit < topRight ? maxLimit : topRight;
-    bottomRight = maxLimit < bottomRight ? maxLimit : bottomRight;
-    bottomLeft = maxLimit < bottomLeft ? maxLimit : bottomLeft;
+    // Move to the point (x + upperLeft["x"], y).
+    moveTo(hd, x + upperLeft, y);
+    writeSRoundRect(hd->shaderInfo, x, y, width, height, upperLeft, upperRight, lowerRight, lowerLeft, hd->antialiasing);
 
-    topRight = width - topLeft < topRight ? width - topLeft : topRight;
-    bottomLeft = height - topLeft < bottomLeft ? height - topLeft : bottomLeft;
-    bottomRight = height - topRight < bottomRight ? height - topRight : bottomRight;
-
-    printf("=>%d %d %d %d\n", topLeft, topRight, bottomRight, bottomLeft);
-
-    writeSRoundRect(hd->shaderInfo, x, y, width, height,
-                    topLeft, topRight, bottomRight, bottomLeft, hd->antialiasing);
-
-    movePen(hd, x, y);
+    movePen(hd, x + upperLeft, y);
+    // Create a new subpath with the point (x, y) as the only point in the subpath.
+    moveTo(hd, x, y);
 }
 
-/// @brief
-/// @param hd
-/// @param x
-/// @param y
-/// @param width
-/// @param height
-/// @param radiiCount
-/// @param radii
-/// @return canvas_err_t
 canvas_err_t roundRectInstance(CanvaHandle_ptr hd, int x, int y,
-                               int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft)
+                               int width, int height, int upperLeft, int upperRight, int lowerRight, int lowerLeft)
 {
-
-    strokeLine(hd, x + topLeft, y, x + width - topRight, y);
-    strokeLine(hd, x + bottomLeft, y + height, x + width - bottomRight, y + height);
-    strokeLine(hd, x, y + topLeft, x, y + height - bottomLeft);
-    strokeLine(hd, x + width, y + topRight, x + width, y + height - bottomRight);
-
-    arcInstance(hd, x + topLeft, y + topLeft, topLeft, 1.f * PI, 1.5f * PI, false);
-    arcInstance(hd, x + width - topRight, y + topRight, topRight, 1.5f * PI, 2.f * PI, false);
-    arcInstance(hd, x + bottomLeft, y + height - bottomLeft, bottomLeft, 0.5f * PI, 1.001f * PI, false);
-    arcInstance(hd, x + width - bottomRight, y + height - bottomRight, bottomRight, 0.0f * PI, 0.5f * PI, false);
-
+    // Draw a straight line to the point (x + w − upperRight["x"], y).
+    strokeLine(hd, x + upperLeft, y, x + width - upperRight, y);
+    // Draw an arc to the point (x + w, y + upperRight["y"]).
+    arcInstance(hd, x + width - upperRight, y + upperRight, upperRight, 1.5f * PI, 2.f * PI, false);
+    // Draw a straight line to the point (x + w, y + h − lowerRight["y"]).
+    strokeLine(hd, x + width, y + upperRight, x + width, y + height - lowerRight);
+    // Draw an arc to the point (x + w − lowerRight["x"], y + h).
+    arcInstance(hd, x + width - lowerRight, y + height - lowerRight, lowerRight, 0.f * PI, 0.5f * PI, false);
+    // Draw a straight line to the point (x + lowerLeft["x"], y + h).
+    strokeLine(hd, x + width - lowerRight, y + height, x + lowerLeft, y + height);
+    // Draw an arc to the point (x, y + h − lowerLeft["y"]).
+    arcInstance(hd, x + lowerLeft, y + height - lowerLeft, lowerLeft, 0.5f * PI, 1.f * PI, false);
+    // Draw a straight line to the point (x, y + upperLeft["y"]).
+    strokeLine(hd, x, y + height - lowerLeft, x, y + upperLeft);
+    // Draw an arc to the point (x + upperLeft["x"], y).
+    arcInstance(hd, x + upperLeft, y + upperLeft, upperLeft, 1.f * PI, 1.5f * PI, false);
     return CANVAS_OK;
 };
 

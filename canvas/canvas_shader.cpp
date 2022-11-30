@@ -113,7 +113,7 @@ bool shaderInfoIterateEnd(Iterator_ptr itor)
 }
 
 //* Shader Container
-ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data)
+ShaderContainer_ptr newShaderContainer(int x, int y, bool anticlockwise, int containerType, void *data)
 {
     ShaderContainer_ptr scon = (ShaderContainer_ptr)malloc(sizeof(ShaderContainer_t));
     scon->x = x;
@@ -121,6 +121,7 @@ ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *da
     scon->TYPE = containerType;
     scon->data = data;
     scon->subpathID = CurrentSubpathID;
+    scon->anticlockwise = anticlockwise;
     return scon;
 }
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
@@ -130,19 +131,19 @@ ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt)
 };
 
 //* Point RGBA32
-ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha)
+ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha, bool anticlockwise)
 {
     sPointRGBA32_ptr pt = nullptr;
     pt = (sPointRGBA32_ptr)malloc(sizeof(sPointRGBA32_t));
     pt->keyPoint = keyPoint;
     pt->alpha = alpha;
-    return newShaderContainer(x, y, SPOINT_RGBA32, (void *)pt);
+    return newShaderContainer(x, y, anticlockwise, SPOINT_RGBA32, (void *)pt);
 }
 
 //* Point RGB888
-ShaderContainer_ptr newSPointRGB888(int x, int y)
+ShaderContainer_ptr newSPointRGB888(int x, int y, bool anticlockwise)
 {
-    return newShaderContainer(x, y, SPOINT_RGB888, nullptr);
+    return newShaderContainer(x, y, anticlockwise, SPOINT_RGB888, nullptr);
 }
 
 //* Line
@@ -153,22 +154,20 @@ ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, 
     pt->x1 = x1;
     pt->y1 = y1;
     pt->antialiasing = antialiasing;
-    pt->anticlockwise = anticlockwise;
-    return newShaderContainer(x0, y0, SLINE, (void *)pt);
+    return newShaderContainer(x0, y0, anticlockwise, SLINE, (void *)pt);
 }
 
 //* Arc
 ShaderContainer_ptr newSArc(int x, int y, int radius, float startAngle,
-                            float endAngle, bool anticlockwise, bool antialiasing)
+                            float endAngle, bool antialiasing, bool anticlockwise)
 {
     sArc_ptr pt = nullptr;
     pt = (sArc_ptr)malloc(sizeof(sArc_t));
     pt->radius = radius;
     pt->startAngle = startAngle;
     pt->endAngle = endAngle;
-    pt->anticlockwise = anticlockwise;
     pt->antialiasing = antialiasing;
-    return newShaderContainer(x, y, SARC, (void *)pt);
+    return newShaderContainer(x, y, anticlockwise, SARC, (void *)pt);
 }
 
 //* RoundRect
@@ -184,7 +183,7 @@ ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height,
     pt->bottomLeft = bottomLeft;
     pt->bottomRight = bottomRight;
     pt->antialiasing = antialiasing;
-    return newShaderContainer(x, y, SROUNDRECT, (void *)pt);
+    return newShaderContainer(x, y, false, SROUNDRECT, (void *)pt);
 }
 
 //* For Fill use
@@ -212,8 +211,7 @@ FillNode_ptr newFillNode_point(int x, int y, bool anticlockwise)
 
 void writeFPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise)
 {
-    ShaderContainer_ptr scon = newShaderContainer(x, y, FPOINT, nullptr);
-    scon->anticlockwise = anticlockwise;
+    ShaderContainer_ptr scon = newShaderContainer(x, y, anticlockwise, FPOINT, nullptr);
     shaderInfo[y] = newLinkListNode(shaderInfo[y], (void *)scon);
 }
 
@@ -223,8 +221,7 @@ void writeFLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool a
     pt = (sLine_ptr)malloc(sizeof(sLine_t));
     pt->x1 = x1;
     pt->y1 = y1;
-    pt->anticlockwise = anticlockwise;
-    ShaderContainer_ptr scon = newShaderContainer(x0, y0, FLINE, (void *)pt);
+    ShaderContainer_ptr scon = newShaderContainer(x0, y0, anticlockwise, FLINE, (void *)pt);
     shaderInfo[y0] = newLinkListNode(shaderInfo[y0], (void *)scon);
 }
 
@@ -238,17 +235,17 @@ bool shaderPointCompare(void *data1, void *data2)
     return scon1->x < scon2->x;
 }
 
-void writeSPoint(LinkList_ptr *shaderInfo, int x, int y)
+void writeSPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise)
 {
     // Create rgb888 point shader container
-    ShaderContainer_ptr scon = newSPointRGB888(x, y);
+    ShaderContainer_ptr scon = newSPointRGB888(x, y, anticlockwise);
     shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 
-void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint)
+void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint, bool anticlockwise)
 {
     // Create rgba32 point shader container
-    ShaderContainer_ptr scon = newSPointRGBA32(x, y, keyPoint, alpha);
+    ShaderContainer_ptr scon = newSPointRGBA32(x, y, keyPoint, alpha, anticlockwise);
     shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 
@@ -259,9 +256,9 @@ void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool a
 }
 
 void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius, float startAngle,
-               float endAngle, bool anticlockwise, bool antialiasing)
+               float endAngle, bool antialiasing, bool anticlockwise)
 {
-    ShaderContainer_ptr scon = newSArc(x, y, radius, startAngle, endAngle, anticlockwise, antialiasing);
+    ShaderContainer_ptr scon = newSArc(x, y, radius, startAngle, endAngle, antialiasing, anticlockwise);
     shaderInfo[y] = sortNewLinkListNode(shaderInfo[y], (void *)scon, shaderPointCompare);
 }
 

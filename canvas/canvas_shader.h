@@ -23,14 +23,10 @@ struct ShaderContainer
     int x;
     int y;
     int TYPE;
-
-    // For FPOINT use
-    bool anticlockwise;
-    bool filled;
-
     void *data;
+    bool anticlockwise;
 };
-ShaderContainer_ptr newShaderContainer(int x, int y, int containerType, void *data);
+ShaderContainer_ptr newShaderContainer(int x, int y, bool anticlockwise, int containerType, void *data);
 ShaderContainer_ptr releaseShaderContainer(ShaderContainer_ptr pt);
 
 enum ShaderContainer_type
@@ -45,7 +41,7 @@ enum ShaderContainer_type
 
     // Need resolve to points when fill
     SARC,
-    SROUNDRECT,
+    SROUNDRECT
 };
 
 //* Iterator
@@ -71,7 +67,6 @@ int currentShaderInfoItorY(Iterator_ptr itor);
 int currentShaderInfoItorYChanged(Iterator_ptr itor);
 bool shaderInfoIterateEnd(Iterator_ptr itor);
 
-// HINT 可以优化的: 减少点集的访问内存次数,ShaderContainer使用union保存RGBA32点
 //* Point RGBA32
 typedef struct sPointRGBA32 sPointRGBA32_t;
 typedef struct sPointRGBA32 *sPointRGBA32_ptr;
@@ -80,10 +75,10 @@ struct sPointRGBA32
     bool keyPoint;
     uint8_t alpha;
 };
-ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha);
+ShaderContainer_ptr newSPointRGBA32(int x, int y, bool keyPoint, uint8_t alpha, bool anticlockwise);
 
 //* Point RGB888
-ShaderContainer_ptr newSPointRGB888(int x, int y);
+ShaderContainer_ptr newSPointRGB888(int x, int y, bool anticlockwise);
 
 //* Line
 typedef struct sLine sLine_t;
@@ -93,7 +88,6 @@ struct sLine
     int x1;
     int y1;
     bool antialiasing;
-    bool anticlockwise; // For nonzero fill use
 };
 ShaderContainer_ptr newSLine(int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise);
 
@@ -105,10 +99,10 @@ struct sArc
     int radius;
     float startAngle;
     float endAngle;
-    bool anticlockwise;
     bool antialiasing;
 };
-ShaderContainer_ptr newSArc(int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
+ShaderContainer_ptr newSArc(int x, int y, int radius, float startAngle, float endAngle,
+                            bool antialiasing, bool anticlockwise);
 
 //* RoundRect
 typedef struct sRoundRect sRoundRect_t;
@@ -123,8 +117,8 @@ struct sRoundRect
     int bottomRight;
     bool antialiasing;
 };
-ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height,
-                                  int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing);
+ShaderContainer_ptr newSRoundRect(int x, int y, int width, int height, int topLeft,
+                                  int topRight, int bottomRight, int bottomLeft, bool antialiasing);
 
 //* For Fill use
 typedef struct FillNode FillNode_t;
@@ -157,11 +151,11 @@ void writeFLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool a
 
 //* Write to shader buffer API
 bool shaderPointCompare(void *data1, void *data2);
-void writeSPoint(LinkList_ptr *shaderInfo, int x, int y);
-void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint);
+void writeSPoint(LinkList_ptr *shaderInfo, int x, int y, bool anticlockwise);
+void writeSPointAA(LinkList_ptr *shaderInfo, int x, int y, uint8_t alpha, bool keyPoint, bool anticlockwise);
 void writeSLine(LinkList_ptr *shaderInfo, int x0, int y0, int x1, int y1, bool antialiasing, bool anticlockwise);
-void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius,
-               float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
+void writeSArc(LinkList_ptr *shaderInfo, int x, int y, int radius, float startAngle,
+               float endAngle, bool antialiasing, bool anticlockwise);
 void writeSRoundRect(LinkList_ptr *shaderInfo, int x, int y, int width, int height,
                      int topLeft, int topRight, int bottomRight, int bottomLeft, bool antialiasing);
 
