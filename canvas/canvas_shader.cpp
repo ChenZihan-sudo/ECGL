@@ -163,7 +163,7 @@ ShaderContainer_ptr newSArc(int x, int y, int radius, float startAngle,
 {
     sArc_ptr pt = nullptr;
     pt = (sArc_ptr)malloc(sizeof(sArc_t));
-    pt->radius = radius;
+    //pt->radius = radius;
     pt->startAngle = startAngle;
     pt->endAngle = endAngle;
     pt->antialiasing = antialiasing;

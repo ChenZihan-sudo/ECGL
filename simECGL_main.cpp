@@ -49,107 +49,50 @@ int simECGL_setup()
 int simECGL_main()
 {
     clock_t start, stop;
-    start = clock();
 
     CanvaHandle_ptr ctx = nullptr;
     ctx = newCanva(ctx);
 
     beginPath(ctx);
+    fillRect(0, 0, 200, 499, 0xFFFFFF);
 
     //!!! Useful
-    moveTo(ctx, 100, 100);
-    lineTo(ctx, 200, 200);
-    lineTo(ctx, 300, 200);
-    lineTo(ctx, 250, 150);
-    lineTo(ctx, 150, 300);
-    // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
-    // lineTo(ctx, 100, 100);
-    closePath(ctx);
-    // lineTo(ctx, 70, 200);
-    // lineTo(ctx, 150, 300);
-    arc(ctx, 40, 200, 30, 0.f * PI, 2.f * PI, false);
-
-    roundRect(ctx, 200, 300, 100, -100, 4, 10, 80, 30, 100);
-
     // moveTo(ctx, 100, 100);
     // lineTo(ctx, 200, 200);
     // lineTo(ctx, 300, 200);
     // lineTo(ctx, 250, 150);
     // lineTo(ctx, 150, 300);
-    // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
+    // // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
+    // // lineTo(ctx, 100, 100);
     // closePath(ctx);
+    // // lineTo(ctx, 70, 200);
+    // // lineTo(ctx, 150, 300);
+    // arc(ctx, 40, 200, 30, 0.f * PI, 2.f * PI, false);
 
-    // moveTo(ctx, 100, 200);
-    // lineTo(ctx, 150, 200);
-    // lineTo(ctx, 200, 100);
-    // lineTo(ctx, 250, 200);
-    // lineTo(ctx, 300, 200);
-    // lineTo(ctx, 200, 300);
-    // closePath(ctx);
+    // roundRect(ctx, 200, 300, 100, -100, 4, 10, 80, 30, 100);
 
-    // 五角星
-    //  moveTo(ctx, 10, 70);
-    //  lineTo(ctx, 130, 70);
-    //  lineTo(ctx, 40, 10);
-    //  lineTo(ctx, 70, 130);
-    //  lineTo(ctx, 100, 10);
-    //  lineTo(ctx, 10, 70);
+    strokeLineAA2(ctx, 0, 0, 100, 60);
+    ctx->rgb888 = 0xFF0000;
+    strokeLineAA(ctx, 0, 100, 100, 160);
 
-    // moveTo(ctx, 100, 100);
-    // lineTo(ctx, 200, 200);
-    // lineTo(ctx, 300, 200);
-    // lineTo(ctx, 250, 150);
-    // lineTo(ctx, 150, 300);
-    // lineTo(ctx, 100, 100);
+    ShaderStatus = stSTROKE;
 
-    // lineTo(ctx, 60, 200);
-    // lineTo(ctx, 300, 499);
-    // closePath(ctx);
-
-    // moveTo(ctx, 100, 10);
-    // lineTo(ctx, 50, 80);
-    // lineTo(ctx, 100, 100);
-    // lineTo(ctx, 100, 10); //=> equival to lineTo
-
-    // lineTo(ctx, 50, 30);
-    // lineTo(ctx, 100, 100);
-
-    // ---6!
-    // moveTo(ctx, 50, 40);
-    // lineTo(ctx, 70, 40);
-    // lineTo(ctx, 70, 80);
-    // lineTo(ctx, 50, 80);
-    // closePath(ctx);
-    // moveTo(ctx, 50, 90);
-    // lineTo(ctx, 70, 90);
-    // lineTo(ctx, 70, 100);
-    // lineTo(ctx, 50, 100);
-    // closePath(ctx);
-    // moveTo(ctx, 100, 40);
-    // lineTo(ctx, 140, 40);
-    // lineTo(ctx, 140, 100);
-    // lineTo(ctx, 100, 100);
-    // lineTo(ctx, 100, 60);
-    // lineTo(ctx, 130, 60);
-    // lineTo(ctx, 130, 50);
-    // lineTo(ctx, 100, 50);
-    // closePath(ctx);
-    // moveTo(ctx, 110, 70);
-    // lineTo(ctx, 130, 70);
-    // lineTo(ctx, 130, 90);
-    // lineTo(ctx, 110, 90);
-    // closePath(ctx);
-    // ---
-
-    ctx->antialiasing = false;
-
-    ctx->rgb888 = 0x0000FF;
-    fill(ctx, NONZERO);
-    ctx->rgb888 = 0xFFFFFF;
-    stroke(ctx);
+    start = clock();
+    for (size_t i = 60; i < 430; i++)
+    {
+        drawCircleAA(ctx, 100, i, 50, true);
+    }
     stop = clock();
     double duration = ((double)(stop - start)) / CLK_TCK;
     printf("%f\n", duration);
+
+    //  arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
+    ctx->antialiasing = false;
+
+    // ctx->rgb888 = 0x0000FF;
+    // fill(ctx, EVENODD);
+
+    stroke(ctx);
 
     // Iterator_ptr itor = newShaderInfoIterator(ctx);
     // int curY;
@@ -250,3 +193,73 @@ int simECGL_main()
 
 // strokeLine(ctx, 80, 50, 130, 150);
 // write_display_memory_on();
+
+// moveTo(ctx, 100, 100);
+// lineTo(ctx, 200, 200);
+// lineTo(ctx, 300, 200);
+// lineTo(ctx, 250, 150);
+// lineTo(ctx, 150, 300);
+// arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
+// closePath(ctx);
+
+// moveTo(ctx, 100, 200);
+// lineTo(ctx, 150, 200);
+// lineTo(ctx, 200, 100);
+// lineTo(ctx, 250, 200);
+// lineTo(ctx, 300, 200);
+// lineTo(ctx, 200, 300);
+// closePath(ctx);
+
+// 五角星
+//  moveTo(ctx, 10, 70);
+//  lineTo(ctx, 130, 70);
+//  lineTo(ctx, 40, 10);
+//  lineTo(ctx, 70, 130);
+//  lineTo(ctx, 100, 10);
+//  lineTo(ctx, 10, 70);
+
+// moveTo(ctx, 100, 100);
+// lineTo(ctx, 200, 200);
+// lineTo(ctx, 300, 200);
+// lineTo(ctx, 250, 150);
+// lineTo(ctx, 150, 300);
+// lineTo(ctx, 100, 100);
+
+// lineTo(ctx, 60, 200);
+// lineTo(ctx, 300, 499);
+// closePath(ctx);
+
+// moveTo(ctx, 100, 10);
+// lineTo(ctx, 50, 80);
+// lineTo(ctx, 100, 100);
+// lineTo(ctx, 100, 10); //=> equival to lineTo
+
+// lineTo(ctx, 50, 30);
+// lineTo(ctx, 100, 100);
+
+// ---6!
+// moveTo(ctx, 50, 40);
+// lineTo(ctx, 70, 40);
+// lineTo(ctx, 70, 80);
+// lineTo(ctx, 50, 80);
+// closePath(ctx);
+// moveTo(ctx, 50, 90);
+// lineTo(ctx, 70, 90);
+// lineTo(ctx, 70, 100);
+// lineTo(ctx, 50, 100);
+// closePath(ctx);
+// moveTo(ctx, 100, 40);
+// lineTo(ctx, 140, 40);
+// lineTo(ctx, 140, 100);
+// lineTo(ctx, 100, 100);
+// lineTo(ctx, 100, 60);
+// lineTo(ctx, 130, 60);
+// lineTo(ctx, 130, 50);
+// lineTo(ctx, 100, 50);
+// closePath(ctx);
+// moveTo(ctx, 110, 70);
+// lineTo(ctx, 130, 70);
+// lineTo(ctx, 130, 90);
+// lineTo(ctx, 110, 90);
+// closePath(ctx);
+// ---

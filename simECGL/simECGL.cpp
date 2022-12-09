@@ -58,7 +58,7 @@ GLFWwindow* createGLFWindow() {
 		glfwMakeContextCurrent(window);
 
 		//! Custom one.
-		glfwSetWindowPos(window, 2000, 1000);
+		glfwSetWindowPos(window, 500, 500);
 	}
 
 	return window;

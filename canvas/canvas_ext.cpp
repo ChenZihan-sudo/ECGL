@@ -96,13 +96,10 @@ canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, 
     if (height < 0)
     {
         y += height;
-        printf("|%d %d\n", upperLeft, lowerLeft);
         swapi(&upperLeft, &lowerLeft);
-        printf("|%d %d\n", upperLeft, lowerLeft);
         swapi(&upperRight, &lowerRight);
         height = -height;
     }
-
     if (width < 0)
     {
         x += width;
@@ -129,8 +126,6 @@ canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, 
     if (flLESS(v, scale))
         scale = v;
 
-    printf("scale:%f\n", scale);
-
     // If scale is less than 1, then set the x and y members of upperLeft, upperRight, lowerLeft, and lowerRight
     // to their current values multiplied by scale.
     if (flLESS(scale, 1.f))
@@ -141,14 +136,10 @@ canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, 
         lowerRight = (float)lowerRight * scale;
     }
 
-    // ! Do test.
-    scanLineRangeUpdate(hd, y);
-
     // Move to the point (x + upperLeft["x"], y).
     moveTo(hd, x + upperLeft, y);
     writeSRoundRect(hd->shaderInfo, x, y, width, height, upperLeft, upperRight, lowerRight, lowerLeft, hd->antialiasing);
 
-    movePen(hd, x + upperLeft, y);
     // Create a new subpath with the point (x, y) as the only point in the subpath.
     moveTo(hd, x, y);
 }

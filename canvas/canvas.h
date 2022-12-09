@@ -98,6 +98,7 @@ void lineTo(CanvaHandle_ptr hdl, int x, int y);
 
 void strokeLine(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1);
 void strokeLineAA(CanvaHandle_ptr hdl, int x0, int y0, int x1, int y1);
+void strokeLineAA2(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1);
 void stroke(CanvaHandle_ptr hdl);
 
 enum FloodFillRepresent_type
@@ -114,10 +115,10 @@ enum FillRule_type
 void fill(CanvaHandle_ptr hdl, ...);
 
 void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise);
+void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise);
 void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 // void arcInstanceAA(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 void arc(CanvaHandle_ptr phd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
-
 void closePath(CanvaHandle_ptr hdl);
 
 void pathDestory(CanvaHandle_ptr hdl);

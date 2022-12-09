@@ -92,25 +92,6 @@ bool outAreaboundTruncated(int *penx, int *peny)
     return outAreaBound;
 };
 
-//! BUG: 在被line调用时 可以进行优化
-bool scanLineRangeUpdate(CanvaHandle_ptr hd, int y)
-{
-    if (y < hd->scanLineMin)
-    {
-        hd->scanLineMin = y;
-        // printf("[D] scanLineMin be set to %d\n", hd->scanLineMin);
-        return true;
-    }
-    else if (y > hd->scanLineMax)
-    {
-        hd->scanLineMax = y;
-        // printf("[D] scanLineMax be set to %d\n", hd->scanLineMax);
-        return true;
-    }
-
-    return false;
-}
-
 // * Point
 Point_ptr newPoint(Point_ptr pt, int x, int y)
 {
@@ -157,8 +138,8 @@ void beginPath(CanvaHandle_ptr hd)
         hd->subpathID = 0;
         hd->beginPenx = 0;
         hd->beginPeny = 0;
-        hd->scanLineMin = DISPLAY_HEIGHT - 1;
-        hd->scanLineMax = 0;
+        hd->scanLineMin = 0;
+        hd->scanLineMax = DISPLAY_HEIGHT - 1;
     }
     else
     {
@@ -176,14 +157,8 @@ void checkAndCloseCurrentSubpath(CanvaHandle_ptr hd)
         int ax, ay, bx, by;
         bool anticlockwise;
 
-        //! Do test.
-        scanLineRangeUpdate(hd, hd->beginPeny);
-        scanLineRangeUpdate(hd, hd->peny);
-
         if (hd->peny > hd->beginPeny)
         {
-            // hd->scanLineMin = y < hd->scanLineMin ? y : hd->scanLineMin;
-            // hd->scanLineMax = hd->peny > hd->scanLineMax ? hd->peny : hd->scanLineMax;
             ax = hd->beginPenx;
             ay = hd->beginPeny;
             bx = hd->penx;
@@ -192,8 +167,6 @@ void checkAndCloseCurrentSubpath(CanvaHandle_ptr hd)
         }
         else
         {
-            // hd->scanLineMin = hd->peny < hd->scanLineMin ? hd->peny : hd->scanLineMin;
-            // hd->scanLineMax = y > hd->scanLineMax ? y : hd->scanLineMax;
             ax = hd->penx;
             ay = hd->peny;
             bx = hd->beginPenx;
@@ -240,14 +213,8 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
     int ax, ay, bx, by;
     bool anticlockwise;
 
-    //! Do test.
-    scanLineRangeUpdate(hd, y);
-    scanLineRangeUpdate(hd, hd->peny);
-
     if (hd->peny > y)
     {
-        // hd->scanLineMin = y < hd->scanLineMin ? y : hd->scanLineMin;
-        // hd->scanLineMax = hd->peny > hd->scanLineMax ? hd->peny : hd->scanLineMax;
         ax = x;
         ay = y;
         bx = hd->penx;
@@ -256,8 +223,6 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
     }
     else
     {
-        // hd->scanLineMin = hd->peny < hd->scanLineMin ? hd->peny : hd->scanLineMin;
-        // hd->scanLineMax = y > hd->scanLineMax ? y : hd->scanLineMax;
         ax = hd->penx;
         ay = hd->peny;
         bx = x;
@@ -303,6 +268,7 @@ int parts8EncodeTool(float pointX, float pointY)
 }
 
 // HINT: Not a API Function.
+// Way of calculation by https://www.academia.edu/30605701/Volume_and_surface_area_of_a_right_circular_cone_cut_by_a_plane_parallel_to_its_symmetrical_axis_Analysis_of_cut_cone_with_a_hyperbolic_section_
 void circularConeFiler_writeColor(int x, int y, RGB888 color, float distance)
 {
     // * This filter can be used when lineWidth = 1
@@ -414,7 +380,7 @@ void tranbackStrokeLinePosi(int id, int *x, int *y)
 }
 
 // HINT: 反走样参考 Reference about antialiasing: 孙家广．计算机图形学［M］．北京：清华大学出版社 1998．
-// 可优化 使用WU反走样算法 or by https://scholar.google.com/scholar?q=%E4%B8%80%E7%A7%8D%E5%9F%BA%E4%BA%8E%E5%8A%A0%E6%9D%83%E5%8C%BA%E5%9F%9F%E9%87%87%E6%A0%B7%E7%9A%84%E7%9B%B4%E7%BA%BF%E5%8F%8D%E8%B5%B0%E6%A0%B7%E7%94%9F%E6%88%90%E7%AE%97%E6%B3%95
+// Optimise: By http://www.cqvip.com/qk/97969a/200906/30513907.html
 // Stroke line with anti-aliasing. (Use gupta sproull algorithm)
 void strokeLineAA(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
 {
@@ -498,6 +464,75 @@ void strokeLineAA(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
     // TODO: Remove This: Line Begin/End Point
     // IDM_writeAlphaBlendColor(x0, y0, 0x00FF00, 0xFF);
     // IDM_writeAlphaBlendColor(x1, y1, 0x00FF00, 0xFF);
+}
+
+// Supersampling + Wu Antialiasing algorithm
+void strokeLineAA2(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
+{
+    int sizex = 2 * (x1 - x0 + 1) + 1;
+    int sizey = 2 * (y1 - y0 + 1) + 1;
+    uint32_t **frameBuf = (uint32_t **)calloc(sizey, sizeof(uint32_t *));
+    for (size_t i = 0; i < sizey; i++)
+    {
+        frameBuf[i] = (uint32_t *)calloc(sizex, sizeof(uint32_t));
+    }
+
+    int px0 = x0;
+    int py0 = y0;
+    int px1 = x1;
+    int py1 = y1;
+
+    x0 = 0;
+    y0 = 0;
+    x1 = sizex - 1;
+    y1 = sizey - 1;
+
+    // Use Bresenham Algorithm
+    int dx = x1 - x0, dy = y1 - y0, x = 0, y = 0;
+    float k = (float)dy / (float)dx, e = 0.f;
+    for (size_t i = 0; i < dx; i++)
+    {
+        x++;
+        uint8_t a = (1.0 - e) * 0xFF;
+
+        // IDM_writeAlphaBlendColor(x, y, 0xFF0000, (1.0 - e) * 255.0);
+        // IDM_writeAlphaBlendColor(x, y + 1, 0xFF0000, 0xFF - a);
+
+        frameBuf[y][x] = a;
+        frameBuf[y + 1][x] = 0xFF - a;
+
+        e += k;
+        if (e >= 1.f)
+        {
+            y++;
+            e--;
+        }
+    }
+
+    for (size_t i = py0; i < py1; i++)
+    {
+        for (size_t j = px0; j < px1; j++)
+        {
+            uint32_t value = 0;
+            value += 1 * frameBuf[2 * i][2 * j];
+            value += 2 * frameBuf[2 * i][2 * j + 1];
+            value += 1 * frameBuf[2 * i][2 * j + 2];
+
+            value += 2 * frameBuf[2 * i + 1][2 * j];
+            value += 4 * frameBuf[2 * i + 1][2 * j + 1];
+            value += 2 * frameBuf[2 * i + 1][2 * j + 2];
+
+            value += 1 * frameBuf[2 * i + 2][2 * j];
+            value += 2 * frameBuf[2 * i + 2][2 * j + 1];
+            value += 1 * frameBuf[2 * i + 2][2 * j + 2];
+
+            value /= 7;
+            if (value > 0xFF)
+                value = 0xFF;
+
+            IDM_writeAlphaBlendColor(j, i, 0xFF0000, value);
+        }
+    }
 }
 
 void strokeLine(CanvaHandle_ptr hd, int x0, int y0, int x1, int y1)
@@ -1183,6 +1218,128 @@ void fill(CanvaHandle_ptr hd, ...)
     ShaderStatus = stSTROKE;
 }
 
+// Reference: http://www.gissky.net/paper/UploadFiles_4495/201207/2012072420494963.pdf
+void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise)
+{
+    // Color
+    uint16_t color = RGB888_to_RGB565(hd->rgb888);
+    uint8_t colorH8b = (color >> 8) & 0xFF;
+    uint8_t colorL8b = color & 0xFF;
+
+    // Draw circle
+    int drawX = 0;
+    int drawY = radius;
+    int d = 1 - radius;
+    int c = 160 - 128 * radius;
+
+    uint8_t h0 = 0xFF, h1 = 0;
+    int x0 = 0, y0 = radius;
+    int x1 = 0, y1 = radius - 1;
+
+    IDM_writeAlphaBlendColor(x0 + x, y0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(y0 + x, x0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(-y0 + x, x0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(-x0 + x, y0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(-x0 + x, -y0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(-y0 + x, -x0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(y0 + x, -x0 + y, hd->rgb888, h0);
+    IDM_writeAlphaBlendColor(x0 + x, -y0 + y, hd->rgb888, h0);
+
+    IDM_writeAlphaBlendColor(x0 + x, y0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(y0 + x, x0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(-y0 + x, x0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(-x0 + x, y0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(-x0 + x, -y0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(-y0 + x, -x0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(y0 + x, -x0 + y, hd->rgb888, h1);
+    IDM_writeAlphaBlendColor(x0 + x, -y0 + y, hd->rgb888, h1);
+
+    while (drawX < drawY + 1)
+    {
+        if (c < 0.f)
+        {
+            float mod1 = (c - 16.0) / drawY;
+            if (c < 32 - (drawY << 7))
+            {
+                // E X+1,Y  G X+1,Y+1
+                h1 = -mod1 - 128; // G
+                h0 = 0xFF - h1;   // E
+                x0 = drawX + 1;
+                y0 = drawY;
+                x1 = drawX + 1;
+                y1 = drawY + 1;
+            }
+            else
+            {
+                // S X+1,Y-1  E X+1,Y
+                h0 = mod1 + 128; // S
+                h1 = 0xFF - h0;  // E
+                x0 = drawX + 1;
+                y0 = drawY - 1;
+                x1 = drawX + 1;
+                y1 = drawY;
+            }
+        }
+        else
+        {
+            float mod2 = (c - 16.0) / (drawY - 1.0);
+            if (c < (drawY << 7) - 96)
+            {
+                // S X+1,Y-1  E X+1,Y
+                h1 = 128 - mod2; // E
+                h0 = 0xFF - h1;  // S
+                x0 = drawX + 1;
+                y0 = drawY - 1;
+                x1 = drawX + 1;
+                y1 = drawY;
+            }
+            else
+            {
+                // S X+1,Y-1 T X+1,Y-2
+                h1 = mod2 - 128; // T
+                h0 = 0xFF - h1;  // S
+                x0 = drawX + 1;
+                y0 = drawY - 1;
+                x1 = drawX + 1;
+                y1 = drawY - 2;
+            }
+        }
+
+        IDM_writeAlphaBlendColor(x0 + x, y0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(y0 + x, x0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(-y0 + x, x0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(-x0 + x, y0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(-x0 + x, -y0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(-y0 + x, -x0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(y0 + x, -x0 + y, hd->rgb888, h0);
+        IDM_writeAlphaBlendColor(x0 + x, -y0 + y, hd->rgb888, h0);
+
+        IDM_writeAlphaBlendColor(x1 + x, y1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(y1 + x, x1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(-y1 + x, x1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(-x1 + x, y1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(-x1 + x, -y1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(-y1 + x, -x1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(y1 + x, -x1 + y, hd->rgb888, h1);
+        IDM_writeAlphaBlendColor(x1 + x, -y1 + y, hd->rgb888, h1);
+
+        if (d >= 0)
+        {
+            int f = 2 * (drawX - drawY) + 5;
+            d += f;
+            c += f << 7; // c>=0
+            drawY--;
+        }
+        else
+        {
+            int f = 2 * drawX + 3;
+            d += f;
+            c += f << 7; // c<0
+        }
+        drawX++;
+    }
+}
+
 void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise)
 {
     // Color
@@ -1191,50 +1348,30 @@ void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise
     uint8_t colorL8b = color & 0xFF;
 
     // Draw circle
-    int drawX = radius;
-    int drawY = 0;
-    int d = 3 - 2 * radius;
+    int drawX = 0;
+    int drawY = radius;
+    int d = 1 - radius;
 
-    while (drawX + 1 > drawY)
+    while (drawX < drawY + 1)
     {
-        switch (ShaderStatus)
-        {
-        case stSTROKE:
-        {
-            IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
-            IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
-            IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
-            IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
-            IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
-            IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
-            IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
-            IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
-        }
-        break;
-        case stFILL:
-        {
-            writeFPoint(CurrentShaderInfo, drawX + x, drawY + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, drawY + x, drawX + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, -drawY + x, drawX + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, -drawX + x, drawY + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, -drawX + x, -drawY + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, -drawY + x, -drawX + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, drawY + x, -drawX + y, anticlockwise);
-            writeFPoint(CurrentShaderInfo, drawX + x, -drawY + y, anticlockwise);
-        }
-        break;
-        }
-
+        IDM_writeColor(drawX + x, drawY + y, colorH8b, colorL8b);
+        IDM_writeColor(drawY + x, drawX + y, colorH8b, colorL8b);
+        IDM_writeColor(-drawY + x, drawX + y, colorH8b, colorL8b);
+        IDM_writeColor(-drawX + x, drawY + y, colorH8b, colorL8b);
+        IDM_writeColor(-drawX + x, -drawY + y, colorH8b, colorL8b);
+        IDM_writeColor(-drawY + x, -drawX + y, colorH8b, colorL8b);
+        IDM_writeColor(drawY + x, -drawX + y, colorH8b, colorL8b);
+        IDM_writeColor(drawX + x, -drawY + y, colorH8b, colorL8b);
         if (d >= 0)
         {
-            d = d + 4 * drawY - 4 * drawX + 10;
-            drawX--;
+            d += 2 * (drawX - drawY) + 5;
+            drawY--;
         }
         else
         {
-            d = d + 4 * drawY + 6;
+            d += 2 * drawX + 3;
         }
-        drawY++;
+        drawX++;
     }
 };
 
@@ -1404,7 +1541,7 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
     int drawY = 0;
     int d = 3 - 2 * radius;
 
-    // Use Bresenham and MidPoint algorithm.
+    // Use MidPoint algorithm.
     while (drawX + 1 > drawY)
     {
         for (size_t i = 0; i < arcCount; i++)
@@ -1452,8 +1589,8 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
         drawY++;
     }
 
-    // TODO: Remove this
-    IDM_writeColor(x, y, colorH8b, colorL8b);
+    // // TODO: Remove this
+    // IDM_writeColor(x, y, colorH8b, colorL8b);
 }
 
 void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
@@ -1472,9 +1609,6 @@ void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float e
         connectLine(hd, x + startDrawPointX, y + startDrawPointY);
 
     writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, hd->antialiasing, anticlockwise);
-
-    // ! Do test.
-    scanLineRangeUpdate(hd, y);
 
     // ! Do test here.
     // * Set Begin Point if it's the first call after beginPath()
