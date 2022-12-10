@@ -54,99 +54,165 @@ int simECGL_main()
     ctx = newCanva(ctx);
 
     beginPath(ctx);
-    fillRect(0, 0, 200, 499, 0xFFFFFF);
+    // fillRect(0, 0, 200, 500, 0xFFFFFF);
 
-    //!!! Useful
-    // moveTo(ctx, 100, 100);
-    // lineTo(ctx, 200, 200);
-    // lineTo(ctx, 300, 200);
-    // lineTo(ctx, 250, 150);
-    // lineTo(ctx, 150, 300);
-    // // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
-    // // lineTo(ctx, 100, 100);
-    // closePath(ctx);
-    // // lineTo(ctx, 70, 200);
-    // // lineTo(ctx, 150, 300);
-    // arc(ctx, 40, 200, 30, 0.f * PI, 2.f * PI, false);
-
-    // roundRect(ctx, 200, 300, 100, -100, 4, 10, 80, 30, 100);
-
-    strokeLineAA2(ctx, 0, 0, 100, 60);
     ctx->rgb888 = 0xFF0000;
-    strokeLineAA(ctx, 0, 100, 100, 160);
-
-    ShaderStatus = stSTROKE;
-
-    start = clock();
-    for (size_t i = 60; i < 430; i++)
-    {
-        drawCircleAA(ctx, 100, i, 50, true);
-    }
-    stop = clock();
-    double duration = ((double)(stop - start)) / CLK_TCK;
-    printf("%f\n", duration);
-
-    //  arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
-    ctx->antialiasing = false;
-
-    // ctx->rgb888 = 0x0000FF;
-    // fill(ctx, EVENODD);
-
+    arc(ctx, 100, 100, 20, 0.f * PI, 2.0 * PI, false);
+    roundRect(ctx, 100, 200, 100, 100, 1, 20);
     stroke(ctx);
-
-    // Iterator_ptr itor = newShaderInfoIterator(ctx);
-    // int curY;
-    // ShaderContainer_ptr scon = nullptr;
-    // while (!shaderInfoIterateEnd(itor))
-    // {
-    //     curY = currentShaderInfoItorY(itor);
-    //     scon = nextShaderContainer(itor);
-    //     printf("Y:%d\n", curY);
-    //     if (scon != nullptr)
-    //     {
-    //         switch (scon->TYPE)
-    //         {
-    //         case SPOINT_RGB888:
-    //         {
-    //             printf("SPOINT_RGB888\n");
-    //         }
-    //         case SPOINT_RGBA32:
-    //         {
-    //             printf("SPOINT_RGBA32\n");
-    //         }
-    //         break;
-    //         case FPOINT:
-    //         {
-    //             printf("FPOINT\n");
-    //         }
-    //         break;
-    //         case SLINE:
-    //         {
-    //             printf("SLINE\n");
-    //             sLine_ptr sli = (sLine_ptr)scon->data;
-    //             printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
-    //         }
-    //         break;
-    //         case SARC:
-    //         {
-    //             printf("SARC\n");
-    //         }
-    //         break;
-    //         case SROUNDRECT:
-    //         {
-    //             printf("SROUNDRECT\n");
-    //         }
-    //         break;
-    //         }
-    //     }
-    // }
-
-    // printf("---------------------------\n");
-
+    drawCircleAA(ctx, 100, 200, 20, true);
     write_display_memory_on();
+
+    Iterator_ptr itor = newShaderInfoIterator(ctx);
+    int curY;
+    ShaderContainer_ptr scon = nullptr;
+    while (!shaderInfoIterateEnd(itor))
+    {
+        curY = currentShaderInfoItorY(itor);
+        scon = nextShaderContainer(itor);
+        printf("Y:%d\n", curY);
+        if (scon != nullptr)
+        {
+            switch (scon->TYPE)
+            {
+            case SPOINT_RGB888:
+            {
+                printf("SPOINT_RGB888\n");
+            }
+            case SPOINT_RGBA32:
+            {
+                printf("SPOINT_RGBA32\n");
+            }
+            break;
+            case FPOINT:
+            {
+                printf("FPOINT\n");
+            }
+            break;
+            case SLINE:
+            {
+                printf("SLINE\n");
+                sLine_ptr sli = (sLine_ptr)scon->data;
+                printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
+            }
+            break;
+            case SARC:
+            {
+                printf("SARC\n");
+            }
+            break;
+            case SROUNDRECT:
+            {
+                printf("SROUNDRECT\n");
+            }
+            break;
+            }
+        }
+    }
+
+    printf("---------------------------\n");
 
     return 0;
 }
+
+// int simECGL_main()
+// {
+//     clock_t start, stop;
+
+//     CanvaHandle_ptr ctx = nullptr;
+//     ctx = newCanva(ctx);
+
+//     beginPath(ctx);
+//     fillRect(0, 0, 200, 499, 0xFFFFFF);
+
+//     //!!! Useful
+//     moveTo(ctx, 100, 100);
+//     lineTo(ctx, 200, 200);
+//     lineTo(ctx, 300, 200);
+//     lineTo(ctx, 250, 150);
+//     lineTo(ctx, 150, 300);
+//     // arc(ctx, 100, 200, 30, 0.f * PI, 1.f * PI, false);
+//     // lineTo(ctx, 100, 100);
+//     closePath(ctx);
+//     // lineTo(ctx, 70, 200);
+//     // lineTo(ctx, 150, 300);
+//     arc(ctx, 40, 200, 30, 0.f * PI, 2.f * PI, false);
+
+//     roundRect(ctx, 200, 300, 100, -100, 4, 10, 80, 30, 100);
+
+//     // strokeLineAA2(ctx, 0, 0, 100, 60);
+//     // ctx->rgb888 = 0xFF0000;
+//     // strokeLineAA(ctx, 0, 100, 100, 160);
+
+//     ShaderStatus = stSTROKE;
+
+//     // start = clock();
+//     // drawCircleAA(ctx, 100, 100, 50, true);
+//     // stop = clock();
+//     // double duration = ((double)(stop - start)) / CLK_TCK;
+//     // printf("%f\n", duration);
+
+//     // arc(ctx, 100, 200, 30, 0.f * PI, 2.f * PI, false);
+//     ctx->antialiasing = false;
+
+//     ctx->rgb888 = 0x0000FF;
+//     fill(ctx, EVENODD);
+
+//     stroke(ctx);
+
+//     // Iterator_ptr itor = newShaderInfoIterator(ctx);
+//     // int curY;
+//     // ShaderContainer_ptr scon = nullptr;
+//     // while (!shaderInfoIterateEnd(itor))
+//     // {
+//     //     curY = currentShaderInfoItorY(itor);
+//     //     scon = nextShaderContainer(itor);
+//     //     printf("Y:%d\n", curY);
+//     //     if (scon != nullptr)
+//     //     {
+//     //         switch (scon->TYPE)
+//     //         {
+//     //         case SPOINT_RGB888:
+//     //         {
+//     //             printf("SPOINT_RGB888\n");
+//     //         }
+//     //         case SPOINT_RGBA32:
+//     //         {
+//     //             printf("SPOINT_RGBA32\n");
+//     //         }
+//     //         break;
+//     //         case FPOINT:
+//     //         {
+//     //             printf("FPOINT\n");
+//     //         }
+//     //         break;
+//     //         case SLINE:
+//     //         {
+//     //             printf("SLINE\n");
+//     //             sLine_ptr sli = (sLine_ptr)scon->data;
+//     //             printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
+//     //         }
+//     //         break;
+//     //         case SARC:
+//     //         {
+//     //             printf("SARC\n");
+//     //         }
+//     //         break;
+//     //         case SROUNDRECT:
+//     //         {
+//     //             printf("SROUNDRECT\n");
+//     //         }
+//     //         break;
+//     //         }
+//     //     }
+//     // }
+
+//     // printf("---------------------------\n");
+
+//     write_display_memory_on();
+
+//     return 0;
+// }
 
 // moveTo(ctx, 0, 0);
 // lineTo(ctx, 10, 10);

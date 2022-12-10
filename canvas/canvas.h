@@ -116,8 +116,7 @@ void fill(CanvaHandle_ptr hdl, ...);
 
 void drawCircle(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise);
 void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwise);
-void arcInstance(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
-// void arcInstanceAA(CanvaHandle_ptr hdl, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
+void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise, bool antialiasing);
 void arc(CanvaHandle_ptr phd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 void closePath(CanvaHandle_ptr hdl);
 

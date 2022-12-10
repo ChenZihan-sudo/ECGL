@@ -692,7 +692,6 @@ void stroke(CanvaHandle_ptr hd)
             case SLINE:
             {
                 sLine_ptr sli = (sLine_ptr)scon->data;
-
                 if (sli->antialiasing)
                     strokeLineAA(hd, scon->x, curY, sli->x1, sli->y1);
                 else
@@ -702,12 +701,8 @@ void stroke(CanvaHandle_ptr hd)
             case SARC:
             {
                 sArc_ptr sarc = (sArc_ptr)scon->data;
-
-                // if (sarc->antialiasing)
-                // else
-
-                arcInstance(hd, scon->x, curY, sarc->radius,
-                            sarc->startAngle, sarc->endAngle, scon->anticlockwise);
+                arcInstance(hd, scon->x, curY, sarc->radius, sarc->startAngle,
+                            sarc->endAngle, scon->anticlockwise, sarc->antialiasing);
             }
             break;
             case SROUNDRECT:
@@ -948,9 +943,8 @@ void fill(CanvaHandle_ptr hd, ...)
         case SARC:
         {
             sArc_ptr sarc = (sArc_ptr)scon->data;
-
             arcInstance(hd, scon->x, curY, sarc->radius,
-                        sarc->startAngle, sarc->endAngle, scon->anticlockwise);
+                        sarc->startAngle, sarc->endAngle, scon->anticlockwise, false);
         }
         break;
         case SROUNDRECT:
@@ -1262,8 +1256,8 @@ void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwi
             if (c < 32 - (drawY << 7))
             {
                 // E X+1,Y  G X+1,Y+1
-                h1 = -mod1 - 128; // G
-                h0 = 0xFF - h1;   // E
+                h1 = -(uint8_t)mod1 - 128; // G
+                h0 = 0xFF - h1;            // E
                 x0 = drawX + 1;
                 y0 = drawY;
                 x1 = drawX + 1;
@@ -1272,8 +1266,8 @@ void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwi
             else
             {
                 // S X+1,Y-1  E X+1,Y
-                h0 = mod1 + 128; // S
-                h1 = 0xFF - h0;  // E
+                h0 = (uint8_t)mod1 + 128; // S
+                h1 = 0xFF - h0;           // E
                 x0 = drawX + 1;
                 y0 = drawY - 1;
                 x1 = drawX + 1;
@@ -1286,8 +1280,8 @@ void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwi
             if (c < (drawY << 7) - 96)
             {
                 // S X+1,Y-1  E X+1,Y
-                h1 = 128 - mod2; // E
-                h0 = 0xFF - h1;  // S
+                h1 = 128 - (uint8_t)mod2; // E
+                h0 = 0xFF - h1;           // S
                 x0 = drawX + 1;
                 y0 = drawY - 1;
                 x1 = drawX + 1;
@@ -1296,8 +1290,8 @@ void drawCircleAA(CanvaHandle_ptr hd, int x, int y, int radius, bool anticlockwi
             else
             {
                 // S X+1,Y-1 T X+1,Y-2
-                h1 = mod2 - 128; // T
-                h0 = 0xFF - h1;  // S
+                h1 = (uint8_t)mod2 - 128; // T
+                h0 = 0xFF - h1;           // S
                 x0 = drawX + 1;
                 y0 = drawY - 1;
                 x1 = drawX + 1;
@@ -1407,6 +1401,62 @@ void arcDrawFP(int arcId, int drawX, int drawY, int x, int y, bool anticlockwise
 }
 
 // HINT: Not a API Function. This Function Called by arc() Only.
+void arcDrawAA(int arcId, int x0, int y0, int x1, int y1, int x, int y, uint8_t h0, uint8_t h1, RGB888 color)
+{
+    switch (arcId)
+    {
+    case 0:
+    {
+        IDM_writeAlphaBlendColor(x0 + x, y0 + y, color, h0);
+        IDM_writeAlphaBlendColor(x1 + x, y1 + y, color, h1);
+        break;
+    }
+    case 4:
+    {
+        IDM_writeAlphaBlendColor(y0 + x, x0 + y, color, h0);
+        IDM_writeAlphaBlendColor(y1 + x, x1 + y, color, h1);
+        break;
+    }
+    case 6:
+    {
+        IDM_writeAlphaBlendColor(-y0 + x, x0 + y, color, h0);
+        IDM_writeAlphaBlendColor(-y1 + x, x1 + y, color, h1);
+        break;
+    }
+    case 2:
+    {
+        IDM_writeAlphaBlendColor(-x0 + x, y0 + y, color, h0);
+        IDM_writeAlphaBlendColor(-x1 + x, y1 + y, color, h1);
+        break;
+    }
+    case 3:
+    {
+        IDM_writeAlphaBlendColor(-x0 + x, -y0 + y, color, h0);
+        IDM_writeAlphaBlendColor(-x1 + x, -y1 + y, color, h1);
+        break;
+    }
+    case 7:
+    {
+        IDM_writeAlphaBlendColor(-y0 + x, -x0 + y, color, h0);
+        IDM_writeAlphaBlendColor(-y1 + x, -x1 + y, color, h1);
+        break;
+    }
+    case 5:
+    {
+        IDM_writeAlphaBlendColor(y0 + x, -x0 + y, color, h0);
+        IDM_writeAlphaBlendColor(y1 + x, -x1 + y, color, h1);
+        break;
+    }
+    case 1:
+    {
+        IDM_writeAlphaBlendColor(x0 + x, -y0 + y, color, h0);
+        IDM_writeAlphaBlendColor(x1 + x, -y1 + y, color, h1);
+        break;
+    }
+    }
+}
+
+// HINT: Not a API Function. This Function Called by arc() Only.
 void arcDraw(int arcId, int drawX, int drawY, int x, int y, uint8_t colorH8b, uint8_t colorL8b)
 {
     switch (arcId)
@@ -1471,19 +1521,12 @@ bool arcDrawBorderChecker(int arcId, int drawX, int drawY, int drawPointX, int d
     return false;
 }
 
-void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)
+void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise, bool antialiasing)
 {
     //* We cut the whole circle into 8 parts. And encode this parts by function parts8EncodeTool().
     //* We store this parts code into array arcs which is the parts we need to draw.
     //* If the end point and begin point of arc in the same part, it's possible that we need maximum 9 arc parts to store the part we want to draw,
     //* and in these 9 parts have two same arc parts. The function arcDrawBorderChecker() will check the border of two arc parts.
-
-    // Judge to draw the circle or arc.
-    if (flGREATE(fabs(startAngle - endAngle), 2.f * PI))
-    {
-        drawCircle(hd, x, y, radius, anticlockwise);
-        return;
-    }
 
     bool originanticlockwise = anticlockwise;
 
@@ -1513,22 +1556,32 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
 
     int arcs[9] = {0};
     int arcCount = 0;
-    for (size_t i = 0; i < 9; i++)
+
+    // Judge to draw the circle or arc.
+    if (flGREATE(fabs(startAngle - endAngle), 2.f * PI))
     {
-        arcs[i] = arcEncode[posi];
-        arcCount++;
-        if (posi == eCodePosi)
+        memcpy(arcs, arcEncode, 8 * sizeof(int));
+        arcCount = 8;
+    }
+    else
+    {
+        for (size_t i = 0; i < 9; i++)
         {
-            if ((sCodePosi == eCodePosi && !equalBreak) &&
-                ((sAngleComp < eAngleComp && anticlockwise) ||
-                 (sAngleComp > eAngleComp && !anticlockwise)))
+            arcs[i] = arcEncode[posi];
+            arcCount++;
+            if (posi == eCodePosi)
             {
-                equalBreak = true;
+                if ((sCodePosi == eCodePosi && !equalBreak) &&
+                    ((sAngleComp < eAngleComp && anticlockwise) ||
+                     (sAngleComp > eAngleComp && !anticlockwise)))
+                {
+                    equalBreak = true;
+                }
+                else
+                    break;
             }
-            else
-                break;
+            posi = posi >= 7 ? 0 : posi + 1;
         }
-        posi = posi >= 7 ? 0 : posi + 1;
     }
 
     // Color
@@ -1537,60 +1590,171 @@ void arcInstance(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle,
     uint8_t colorL8b = color & 0xFF;
 
     // Draw arc
-    int drawX = radius;
-    int drawY = 0;
-    int d = 3 - 2 * radius;
+    int drawX = 0;
+    int drawY = radius;
+    int d = 1 - radius;
 
-    // Use MidPoint algorithm.
-    while (drawX + 1 > drawY)
+    if (antialiasing)
     {
-        for (size_t i = 0; i < arcCount; i++)
-        {
-            int arcId = arcs[i];
-            if (i == 0)
-            {
-                bool checker1 = arcDrawBorderChecker(arcId, drawX, drawY, startDrawPointX, startDrawPointY);
-                if (checker1)
-                    goto drawarc;
-            }
-            else if (i == arcCount - 1)
-            {
-                bool checker2 = arcDrawBorderChecker(arcId, drawX, drawY, endDrawPointX, endDrawPointY);
-                if (!checker2)
-                    goto drawarc;
-            }
-            else
-                goto drawarc;
+        // For antialiasing
+        int c = 160 - 128 * radius;
+        uint8_t h0 = 0xFF, h1 = 0;
+        int x0 = 0, y0 = radius;
+        int x1 = 0, y1 = radius - 1;
 
-            while (false)
+        while (drawX < drawY + 1)
+        {
+            for (size_t i = 0; i < arcCount; i++)
             {
-            drawarc:
-                switch (ShaderStatus)
+                int arcId = arcs[i];
+                if (i == 0)
                 {
-                case stSTROKE:
-                    arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
-                    break;
-                case stFILL:
-                    arcDrawFP(arcId, drawX, drawY, x, y, originanticlockwise);
-                    break;
+                    bool checker1 = arcDrawBorderChecker(arcId, drawX, drawY, startDrawPointX, startDrawPointY);
+                    if (checker1)
+                        goto drawarcAA;
+                }
+                else if (i == arcCount - 1)
+                {
+                    bool checker2 = arcDrawBorderChecker(arcId, drawX, drawY, endDrawPointX, endDrawPointY);
+                    if (!checker2)
+                        goto drawarcAA;
+                }
+                else
+                    goto drawarcAA;
+
+                while (false)
+                {
+                drawarcAA:
+                    switch (ShaderStatus)
+                    {
+                    case stSTROKE:
+                        arcDrawAA(arcId, x0, y0, x1, y1, x, y, h0, h1, hd->rgb888);
+                        break;
+                    case stFILL:
+                        arcDrawFP(arcId, drawX, drawY, x, y, originanticlockwise);
+                        break;
+                    }
                 }
             }
-        }
 
-        if (d >= 0)
-        {
-            d = d + 4 * drawY - 4 * drawX + 10;
-            drawX--;
+            if (c < 0)
+            {
+                float mod1 = (c - 16.0) / drawY;
+                if (c < 32 - (drawY << 7))
+                {
+                    // E X+1,Y  G X+1,Y+1
+                    h1 = -(uint8_t)mod1 - 128; // G
+                    h0 = 0xFF - h1;            // E
+                    x0 = drawX + 1;
+                    y0 = drawY;
+                    x1 = drawX + 1;
+                    y1 = drawY + 1;
+                }
+                else
+                {
+                    // S X+1,Y-1  E X+1,Y
+                    h0 = (uint8_t)mod1 + 128; // S
+                    h1 = 0xFF - h0;           // E
+                    x0 = drawX + 1;
+                    y0 = drawY - 1;
+                    x1 = drawX + 1;
+                    y1 = drawY;
+                }
+            }
+            else
+            {
+                float mod2 = (c - 16.0) / (drawY - 1.0);
+                if (c < (drawY << 7) - 96)
+                {
+                    // S X+1,Y-1  E X+1,Y
+                    h1 = 128 - (uint8_t)mod2; // E
+                    h0 = 0xFF - h1;           // S
+                    x0 = drawX + 1;
+                    y0 = drawY - 1;
+                    x1 = drawX + 1;
+                    y1 = drawY;
+                }
+                else
+                {
+                    // S X+1,Y-1 T X+1,Y-2
+                    h1 = (uint8_t)mod2 - 128; // T
+                    h0 = 0xFF - h1;           // S
+                    x0 = drawX + 1;
+                    y0 = drawY - 1;
+                    x1 = drawX + 1;
+                    y1 = drawY - 2;
+                }
+            }
+
+            if (d >= 0)
+            {
+                int f = 2 * (drawX - drawY) + 5;
+                d += f;
+                c += f << 7; // c>=0
+                drawY--;
+            }
+            else
+            {
+                int f = 2 * drawX + 3;
+                d += f;
+                c += f << 7; // c<0
+            }
+            drawX++;
         }
-        else
+    }
+    else
+    {
+        // Use MidPoint algorithm.
+        while (drawX < drawY + 1)
         {
-            d = d + 4 * drawY + 6;
+            for (size_t i = 0; i < arcCount; i++)
+            {
+                int arcId = arcs[i];
+                if (i == 0)
+                {
+                    bool checker1 = arcDrawBorderChecker(arcId, drawX, drawY, startDrawPointX, startDrawPointY);
+                    if (checker1)
+                        goto drawarc;
+                }
+                else if (i == arcCount - 1)
+                {
+                    bool checker2 = arcDrawBorderChecker(arcId, drawX, drawY, endDrawPointX, endDrawPointY);
+                    if (!checker2)
+                        goto drawarc;
+                }
+                else
+                    goto drawarc;
+
+                while (false)
+                {
+                drawarc:
+                    switch (ShaderStatus)
+                    {
+                    case stSTROKE:
+                        arcDraw(arcId, drawX, drawY, x, y, colorH8b, colorL8b);
+                        break;
+                    case stFILL:
+                        arcDrawFP(arcId, drawX, drawY, x, y, originanticlockwise);
+                        break;
+                    }
+                }
+            }
+
+            if (d >= 0)
+            {
+                d = d + 2 * drawX - 2 * drawY + 5;
+                drawY--;
+            }
+            else
+            {
+                d = d + 2 * drawX + 3;
+            }
+            drawX++;
         }
-        drawY++;
     }
 
-    // // TODO: Remove this
-    // IDM_writeColor(x, y, colorH8b, colorL8b);
+    // TODO: Remove this
+    IDM_writeColor(x, y, colorH8b, colorL8b);
 }
 
 void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise)

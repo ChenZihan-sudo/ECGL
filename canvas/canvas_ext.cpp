@@ -150,19 +150,19 @@ canvas_err_t roundRectInstance(CanvaHandle_ptr hd, int x, int y,
     // Draw a straight line to the point (x + w − upperRight["x"], y).
     strokeLine(hd, x + upperLeft, y, x + width - upperRight, y);
     // Draw an arc to the point (x + w, y + upperRight["y"]).
-    arcInstance(hd, x + width - upperRight, y + upperRight, upperRight, 1.5f * PI, 2.f * PI, false);
+    arcInstance(hd, x + width - upperRight, y + upperRight, upperRight, 1.5f * PI, 2.f * PI, false, true);
     // Draw a straight line to the point (x + w, y + h − lowerRight["y"]).
     strokeLine(hd, x + width, y + upperRight, x + width, y + height - lowerRight);
     // Draw an arc to the point (x + w − lowerRight["x"], y + h).
-    arcInstance(hd, x + width - lowerRight, y + height - lowerRight, lowerRight, 0.f * PI, 0.5f * PI, false);
+    arcInstance(hd, x + width - lowerRight, y + height - lowerRight, lowerRight, 0.f * PI, 0.5f * PI, false, true);
     // Draw a straight line to the point (x + lowerLeft["x"], y + h).
     strokeLine(hd, x + width - lowerRight, y + height, x + lowerLeft, y + height);
     // Draw an arc to the point (x, y + h − lowerLeft["y"]).
-    arcInstance(hd, x + lowerLeft, y + height - lowerLeft, lowerLeft, 0.5f * PI, 1.f * PI, false);
+    arcInstance(hd, x + lowerLeft, y + height - lowerLeft, lowerLeft, 0.5f * PI, 1.f * PI, false, true);
     // Draw a straight line to the point (x, y + upperLeft["y"]).
     strokeLine(hd, x, y + height - lowerLeft, x, y + upperLeft);
     // Draw an arc to the point (x + upperLeft["x"], y).
-    arcInstance(hd, x + upperLeft, y + upperLeft, upperLeft, 1.f * PI, 1.5f * PI, false);
+    arcInstance(hd, x + upperLeft, y + upperLeft, upperLeft, 1.f * PI, 1.5f * PI, false, true);
     return CANVAS_OK;
 };
 
