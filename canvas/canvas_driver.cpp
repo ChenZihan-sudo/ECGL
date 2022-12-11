@@ -15,7 +15,6 @@
 #include "../display/display_config.h"
 #include "../datamodel/data_model.h"
 #include "canvas_driver.h"
-#include "canvas_ext.h"
 #include "canvas.h"
 
 #include "../simECGL/simECGL.h"

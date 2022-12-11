@@ -1,6 +1,10 @@
 #ifndef DATA_MODEL_H
 #define DATA_MODEL_H
 
+// * Swaps
+void swapi(int *a, int *b);
+void swapf(float *a, float *b);
+
 // * Link List
 typedef struct LinkList LinkList_t;
 typedef struct LinkList *LinkList_ptr;

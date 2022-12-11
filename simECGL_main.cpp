@@ -2,10 +2,10 @@
 #include <iostream>
 #include "canvas/canvas_driver.h"
 #include "canvas/canvas.h"
-#include "canvas/canvas_ext.h"
 #include "canvas/canvas_config.h"
 #include "canvas/canvas_shader.h"
 #include "display/display_config.h"
+#include "canvas/canvas_graphics.h""
 #include "simECGL/simECGL.h"
 #include <time.h>
 
@@ -54,11 +54,11 @@ int simECGL_main()
     ctx = newCanva(ctx);
 
     beginPath(ctx);
-    // fillRect(0, 0, 200, 500, 0xFFFFFF);
+    fillRect(0, 0, 200, 500, 0x222222);
 
     ctx->rgb888 = 0xFF0000;
     arc(ctx, 100, 100, 20, 0.f * PI, 2.0 * PI, false);
-    roundRect(ctx, 100, 200, 100, 100, 1, 20);
+    roundRect(ctx, 100, 200, 100, 30, 1, 50);
     stroke(ctx);
     drawCircleAA(ctx, 100, 200, 20, true);
     write_display_memory_on();

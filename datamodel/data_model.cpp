@@ -10,7 +10,6 @@
 
 #include "../display/display_config.h"
 #include "../canvas/canvas.h"
-#include "../canvas/canvas_ext.h"
 #include "data_model.h"
 
 //#ifdef __cplusplus
@@ -23,6 +22,21 @@
 #define nullptr NULL
 #define bool short
 #endif
+
+// * Swaps
+void swapi(int *a, int *b)
+{
+    int c = *a;
+    *a = *b;
+    *b = c;
+}
+
+void swapf(float *a, float *b)
+{
+    float c = *a;
+    *a = *b;
+    *b = c;
+}
 
 // * Link List
 LinkList_ptr newLinkListNode(LinkList_ptr linklist, void *data)
