@@ -240,6 +240,8 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
         moveTo(hd, x, y);
 };
 
+
+//TODO: Bugs when slope is infinite
 void arcTo(CanvaHandle_ptr hd, int x1, int y1, int x2, int y2, int radius)
 {
     // Ref: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arcto
@@ -335,18 +337,21 @@ void arcTo(CanvaHandle_ptr hd, int x1, int y1, int x2, int y2, int radius)
 
     float ox = (b12 - b01 + (m01 - m12)) / (k01 - k12);
     float oy = k01 * ox + b01 - m01;
+
     // Calculate two lines tangent with l01, l12, separately.
     float kl1 = -1.0 / k01;
     float kl2 = -1.0 / k12;
     float bl1 = oy - kl1 * ox;
     float bl2 = oy - kl2 * ox;
+
     // Calculate intersection points.
     float ix1 = (bl1 - b01) / (k01 - kl1);
     float iy1 = k01 * ix1 + b01;
     float ix2 = (bl2 - b12) / (k12 - kl2);
     float iy2 = k12 * ix2 + b12;
+
     // Transform point to angle
-    // Transform P(ix1,iy1) and P(ix2,iy2) relative to origin point P(ox,oy)
+    // Let P(ix1,iy1) and P(ix2,iy2) relative to origin point P(ox,oy)
     int rix1 = ix1 - ox;
     int riy1 = iy1 - oy;
     int rix2 = ix2 - ox;
@@ -356,9 +361,9 @@ void arcTo(CanvaHandle_ptr hd, int x1, int y1, int x2, int y2, int radius)
     float angleBegin = arcAngles.angleBegin, angleEnd = arcAngles.angleEnd;
 
     // TODO: Remove this below.
-    IDM_writeAlphaBlendColor(ox, oy, 0x00FF00, 0xFF);
-    IDM_writeAlphaBlendColor(ix1, iy1, 0x00FF00, 0xFF);
-    IDM_writeAlphaBlendColor(ix2, iy2, 0x00FF00, 0xFF);
+    // IDM_writeAlphaBlendColor(ox, oy, 0x00FF00, 0xFF);
+    // IDM_writeAlphaBlendColor(ix1, iy1, 0x00FF00, 0xFF);
+    // IDM_writeAlphaBlendColor(ix2, iy2, 0x00FF00, 0xFF);
     // printf("k01 %f k12 %f\n", k01, k12);
     // printf("kl1 %f kl2 %f\n", kl1, kl2);
     // printf("ox:%f oy:%f\n", ox, oy);
@@ -822,7 +827,6 @@ void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float e
     float endDrawPointX = ((float)radius * cos(endAngle));
     float endDrawPointY = ((float)radius * sin(endAngle));
 
-    printf("sX %f sY %f eX %f eY %f\n", startDrawPointX, startDrawPointY, endDrawPointX, endDrawPointY);
 
     // // ! Not sure about this
     // if (anticlockwise)

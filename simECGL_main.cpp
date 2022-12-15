@@ -64,68 +64,68 @@ int simECGL_main()
     // drawCircleAA(ctx, 100, 200, 20, true);
     // write_display_memory_on();
 
-    moveTo(ctx, 100, 150);
-    lineTo(ctx, 200, 100);
-    lineTo(ctx, 50, 400);
+    // moveTo(ctx, 100, 150);
+    // lineTo(ctx, 300, 450);
+    // lineTo(ctx, 50, 400);
 
-    moveTo(ctx, 100, 150);
-    arcTo(ctx, 200, 100, 50, 400, 30);
+    // moveTo(ctx, 100, 150);
+    // arcTo(ctx, 300, 450, 50, 400, 30);
 
-    // arc(ctx, 300, 300, 30, 0.012496 * PI, 0.791154 * PI, false);
+    arc(ctx, 100, 100, 30, 0.55 * PI, 0.65 * PI, false);
 
     stroke(ctx);
     //fill(ctx);
 
     write_display_memory_on();
 
-    Iterator_ptr itor = newShaderInfoIterator(ctx);
-    int curY;
-    ShaderContainer_ptr scon = nullptr;
-    while (!shaderInfoIterateEnd(itor))
-    {
-        curY = currentShaderInfoItorY(itor);
-        scon = nextShaderContainer(itor);
-        printf("Y:%d\n", curY);
-        if (scon != nullptr)
-        {
-            switch (scon->TYPE)
-            {
-            case SPOINT_RGB888:
-            {
-                printf("SPOINT_RGB888\n");
-            }
-            case SPOINT_RGBA32:
-            {
-                printf("SPOINT_RGBA32\n");
-            }
-            break;
-            case FPOINT:
-            {
-                printf("FPOINT\n");
-            }
-            break;
-            case SLINE:
-            {
-                printf("SLINE\n");
-                sLine_ptr sli = (sLine_ptr)scon->data;
-                printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
-            }
-            break;
-            case SARC:
-            {
-                printf("SARC\n");
-            }
-            break;
-            case SROUNDRECT:
-            {
-                printf("SROUNDRECT\n");
-            }
-            break;
-            }
-        }
-    }
+    // Iterator_ptr itor = newShaderInfoIterator(ctx);
+    // int curY;
+    // ShaderContainer_ptr scon = nullptr;
+    // while (!shaderInfoIterateEnd(itor))
+    // {
+    //     curY = currentShaderInfoItorY(itor);
+    //     scon = nextShaderContainer(itor);
+    //     printf("Y:%d\n", curY);
+    //     if (scon != nullptr)
+    //     {
+    //         switch (scon->TYPE)
+    //         {
+    //         case SPOINT_RGB888:
+    //         {
+    //             printf("SPOINT_RGB888\n");
+    //         }
+    //         case SPOINT_RGBA32:
+    //         {
+    //             printf("SPOINT_RGBA32\n");
+    //         }
+    //         break;
+    //         case FPOINT:
+    //         {
+    //             printf("FPOINT\n");
+    //         }
+    //         break;
+    //         case SLINE:
+    //         {
+    //             printf("SLINE\n");
+    //             sLine_ptr sli = (sLine_ptr)scon->data;
+    //             printf("LINE: %d %d %d %d\n", scon->x, scon->y, sli->x1, sli->y1);
+    //         }
+    //         break;
+    //         case SARC:
+    //         {
+    //             printf("SARC\n");
+    //         }
+    //         break;
+    //         case SROUNDRECT:
+    //         {
+    //             printf("SROUNDRECT\n");
+    //         }
+    //         break;
+    //         }
+    //     }
+    // }
 
-    printf("---------------------------\n");
+    // printf("---------------------------\n");
 
     return 0;
 }

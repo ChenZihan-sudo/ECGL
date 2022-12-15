@@ -127,7 +127,7 @@ void write_display_memory_on()
     simECGL_glWindowDisplay();
 }
 
-canvas_err_t IDM_writeColorIn(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
+canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
 {
     size_t addr = 2 * ((IDM_yBegin + y) * DISPLAY_WIDTH + (IDM_xBegin + x));
     if (addr >= sizeofDisplayMemory)
@@ -137,12 +137,12 @@ canvas_err_t IDM_writeColorIn(int x, int y, uint8_t colorHigh8b, uint8_t colorLo
     return CANVAS_OK;
 }
 
-canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
-{
-    int aY = DISPLAY_HEIGHT - y;
-    IDM_writeColorIn(x, aY, colorHigh8b, colorLow8b);
-    return CANVAS_OK;
-}
+// canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
+// {
+//     int aY = DISPLAY_HEIGHT - y;
+//     IDM_writeColorIn(x, aY, colorHigh8b, colorLow8b);
+//     return CANVAS_OK;
+// }
 
 /*
  * The method for setting the coordinate origin is as follows.
