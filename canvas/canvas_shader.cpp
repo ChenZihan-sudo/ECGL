@@ -37,51 +37,49 @@ Iterator_ptr newShaderInfoIterator(CanvaHandle_ptr hdl)
 ShaderContainer_ptr nextShaderContainer(Iterator_ptr itor)
 {
     ShaderContainer_ptr scon = nullptr;
-    if (itor != nullptr)
+    if (itor == nullptr)
+        return scon;
+    if (itor->iteratorType != SHADER_INFO || itor->val2 != 0)
+        return scon;
+
+    itor->val3 = 0;
+
+    CanvaHandle_ptr hdl = (CanvaHandle_ptr)itor->data1;
+    LinkList_ptr info = nullptr;
+
+    if (itor->data2 == nullptr)
     {
-        if (itor->iteratorType == SHADER_INFO)
+        LinkList_ptr nextll = hdl->shaderInfo[itor->val1];
+        itor->data2 = (void *)nextll;
+        info = nextll;
+    }
+    else
+        info = (LinkList_ptr)itor->data2;
+
+    if (info != nullptr)
+    {
+        scon = (ShaderContainer_ptr)info->data;
+
+        if (info->next != nullptr)
+            itor->data2 = (void *)info->next;
+        else
         {
-            itor->val3 = 0;
-            if (itor->val2 == 0) // End flag of iterator
-            {
-                CanvaHandle_ptr hdl = (CanvaHandle_ptr)itor->data1;
-                LinkList_ptr info = nullptr;
-
-                if (itor->data2 == nullptr)
-                {
-                    LinkList_ptr nextll = hdl->shaderInfo[itor->val1];
-                    itor->data2 = (void *)nextll;
-                    info = nextll;
-                }
-                else
-                    info = (LinkList_ptr)itor->data2;
-
-                if (info != nullptr)
-                {
-                    scon = (ShaderContainer_ptr)info->data;
-
-                    if (info->next != nullptr)
-                        itor->data2 = (void *)info->next;
-                    else
-                    {
-                        itor->data2 = nullptr;
-                        itor->val1++;
-                        itor->val3 = 1;
-                    }
-                }
-                else
-                {
-                    itor->val1++;
-                    itor->val3 = 1;
-                }
-
-                int min = hdl->scanLineMin;
-                int max = hdl->scanLineMax;
-                if (!(min <= itor->val1 && itor->val1 <= max))
-                    itor->val2 = 1;
-            }
+            itor->data2 = nullptr;
+            itor->val1++;
+            itor->val3 = 1;
         }
     }
+    else
+    {
+        itor->val1++;
+        itor->val3 = 1;
+    }
+
+    int min = hdl->scanLineMin;
+    int max = hdl->scanLineMax;
+    if (!(min <= itor->val1 && itor->val1 <= max))
+        itor->val2 = 1;
+
     return scon;
 }
 

@@ -72,10 +72,20 @@ Point_ptr newPoint(Point_ptr pt, int x, int y);
 bool compareET_lineTo(void *data1, void *data2);     // This function called by "void lineTo(CanvaHandle_ptr phd, int x, int y)" only.
 bool fill_compareFillNode(void *data1, void *data2); // This function called by "void fill(CanvaHandle_ptr phd)" only.
 
+struct ArcAngles
+{
+    float angleBegin;
+    float angleEnd;
+};
+typedef struct ArcAngles ArcAngles_t;
+typedef struct ArcAngles *ArcAngles_ptr;
+ArcAngles_t transformArcBeginEndPointToAngle(int beginPointX, int beginPointY, int endPointX, int endPointY, int radius);
+
 //* API Functions.
 void beginPath(CanvaHandle_ptr hdl);
 void moveTo(CanvaHandle_ptr hdl, int x, int y);
 void lineTo(CanvaHandle_ptr hdl, int x, int y);
+void arcTo(CanvaHandle_ptr hd, int x1, int y1, int x2, int y2, int radius);
 void arc(CanvaHandle_ptr phd, int x, int y, int radius, float startAngle, float endAngle, bool anticlockwise);
 canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, int radiiCount, ...);
 void closePath(CanvaHandle_ptr hdl);

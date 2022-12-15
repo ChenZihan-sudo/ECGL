@@ -47,6 +47,7 @@ bool connectLine(CanvaHandle_ptr hd, int penx, int peny)
 {
     if (hd->apiCalled)
     {
+        printf("LINETO2\n");
         lineTo(hd, penx, peny);
         return true;
     }
@@ -153,7 +154,6 @@ void checkAndCloseCurrentSubpath(CanvaHandle_ptr hd)
     // add FLine from begin coordinate to current pen coordinate for filling purpose
     if (hd->penx != hd->beginPenx || hd->peny != hd->beginPeny)
     {
-        // printf("SUBPATH NOT CLOSE\n");
         int ax, ay, bx, by;
         bool anticlockwise;
 
@@ -239,6 +239,182 @@ void lineTo(CanvaHandle_ptr hd, int x, int y)
     if (hd->beginPenx == x && hd->beginPeny == y)
         moveTo(hd, x, y);
 };
+
+void arcTo(CanvaHandle_ptr hd, int x1, int y1, int x2, int y2, int radius)
+{
+    // Ref: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arcto
+
+    // Ensure there is a subpath for (x1, y1).
+    if (hd->needNewSubpath)
+        moveTo(hd, x1, y1);
+    if (radius < 0)
+        return;
+
+    int x0 = hd->penx, y0 = hd->peny;
+    if ((x0 == x1 && y0 == y1) || (x1 == x2 && y1 == y2) || (radius == 0))
+    {
+        lineTo(hd, x1, y1); // line to point (x1,y1)
+        printf("TYPE 1\n");
+        return;
+    }
+
+    int x01 = x1 - x0, y01 = y1 - y0, x12 = x2 - x1, y12 = y2 - y1;
+    float k01 = (float)y01 / (float)x01, k12 = (float)y12 / (float)x12;
+
+    if (flEQUAL(k01, k12))
+    {
+        lineTo(hd, x1, y1); // line to point (x1,y1)
+        printf("TYPE 2\n");
+        return;
+    }
+
+    // y = kx + b;
+    // Define l01: (x0,y0)<->(x1,y1), its tangent line l1.
+    // Define l12: (x1,y1)<->(x2,y2), its tangent line l2.
+
+    // Calculate line equations of l01, l12, arc origin point
+    float b01 = y1 - k01 * x1;
+    float b12 = y2 - k12 * x2;
+    float m01 = radius * sqrt(pow(k01, 2.f) + 1.0);
+    float m12 = radius * sqrt(pow(k12, 2.f) + 1.0);
+
+    // Deal with the sign of m01 and m12, it have 4 possiblities.
+    // Divide slope situations into 6 pieces as follow, and for any situations two lines can divide space into 4 blocks.
+    // These steps as follow is to find a suitable space block by k01 and k12 to give sign of m01 and m12.
+    // The rules can be find by manually test which one space block should give what kind of sign
+    // and its listed in switch statement as follow.
+
+    // Let (x1,y1) be the ralative origin point to (x0,y0), (x2,y2)
+    int ox0 = x0 - x1, ox2 = x2 - x1;
+    uint8_t key = (k01 >= 0.0) << 1 | (k12 >= 0.0);
+    uint8_t keySpaceBlock = ((ox0 > 0) << 1) | (ox2 > 0);
+    uint8_t dataArr[12] = {1, 2, 4, 3,
+                           3, 4, 2, 1,
+                           3, 2, 4, 1};
+    switch (key)
+    {
+    case 0b00:
+    {
+        if (k01 < k12)
+            key = dataArr[4 + keySpaceBlock];
+        else
+            key = dataArr[0 + keySpaceBlock];
+        break;
+    }
+    case 0b01:
+        key = dataArr[4 + keySpaceBlock];
+        break;
+    case 0b10:
+        key = dataArr[0 + keySpaceBlock];
+        break;
+    case 0b11:
+    {
+        if (k01 > k12)
+            key = dataArr[0 + keySpaceBlock];
+        else
+            key = dataArr[8 + keySpaceBlock];
+    }
+    break;
+    }
+
+    switch (key)
+    {
+    case 1:
+        m01 = -m01;
+        break;
+    case 3:
+        m12 = -m12;
+        break;
+    case 4:
+    {
+        m01 = -m01;
+        m12 = -m12;
+        break;
+    }
+    }
+
+    float ox = (b12 - b01 + (m01 - m12)) / (k01 - k12);
+    float oy = k01 * ox + b01 - m01;
+    // Calculate two lines tangent with l01, l12, separately.
+    float kl1 = -1.0 / k01;
+    float kl2 = -1.0 / k12;
+    float bl1 = oy - kl1 * ox;
+    float bl2 = oy - kl2 * ox;
+    // Calculate intersection points.
+    float ix1 = (bl1 - b01) / (k01 - kl1);
+    float iy1 = k01 * ix1 + b01;
+    float ix2 = (bl2 - b12) / (k12 - kl2);
+    float iy2 = k12 * ix2 + b12;
+    // Transform point to angle
+    // Transform P(ix1,iy1) and P(ix2,iy2) relative to origin point P(ox,oy)
+    int rix1 = ix1 - ox;
+    int riy1 = iy1 - oy;
+    int rix2 = ix2 - ox;
+    int riy2 = iy2 - oy;
+
+    ArcAngles_t arcAngles = transformArcBeginEndPointToAngle(rix1, riy1, rix2, riy2, radius);
+    float angleBegin = arcAngles.angleBegin, angleEnd = arcAngles.angleEnd;
+
+    // TODO: Remove this below.
+    IDM_writeAlphaBlendColor(ox, oy, 0x00FF00, 0xFF);
+    IDM_writeAlphaBlendColor(ix1, iy1, 0x00FF00, 0xFF);
+    IDM_writeAlphaBlendColor(ix2, iy2, 0x00FF00, 0xFF);
+    // printf("k01 %f k12 %f\n", k01, k12);
+    // printf("kl1 %f kl2 %f\n", kl1, kl2);
+    // printf("ox:%f oy:%f\n", ox, oy);
+    // printf("ix1:%f iy1:%f ix2:%f iy2:%f\n", ix1, iy1, ix2, iy2);
+
+    if (angleBegin > angleEnd)
+        swapf(&angleBegin, &angleEnd);
+
+    bool anticlockwise = false;
+    if (angleEnd - angleBegin > PI)
+        anticlockwise = true;
+
+    arc(hd, ox, oy, radius, angleBegin, angleEnd, anticlockwise);
+}
+
+ArcAngles_t transformArcBeginEndPointToAngle(int beginPointX, int beginPointY, int endPointX, int endPointY, int radius)
+{
+    ArcAngles_t arcAngles;
+    int ptX = beginPointX, ptY = beginPointY, key;
+    float result;
+    for (size_t i = 0; i < 2; i++)
+    {
+        if (i == 1)
+        {
+            ptX = endPointX;
+            ptY = endPointY;
+        }
+
+        key = (ptX > 0) << 1 | (ptY > 0);
+        switch (key)
+        {
+        case 0b00:
+            result = PI + asinf((float)abs(ptY) / radius);
+            break;
+        case 0b01:
+            result = PI_0P5 + asinf((float)abs(ptX) / radius);
+            break;
+        case 0b10:
+            result = PI_1P5 + asinf((float)abs(ptX) / radius);
+            break;
+        case 0b11:
+            result = asinf((float)abs(ptY) / radius);
+            break;
+        };
+
+        if (i == 0)
+        {
+            arcAngles.angleBegin = result;
+        }
+        else
+        {
+            arcAngles.angleEnd = result;
+        }
+    }
+    return arcAngles;
+}
 
 void stroke(CanvaHandle_ptr hd)
 {
@@ -646,26 +822,28 @@ void arc(CanvaHandle_ptr hd, int x, int y, int radius, float startAngle, float e
     float endDrawPointX = ((float)radius * cos(endAngle));
     float endDrawPointY = ((float)radius * sin(endAngle));
 
-    // ! Not sure about this
-    if (anticlockwise)
-        connectLine(hd, x + endDrawPointX, y + endDrawPointY);
-    else
-        connectLine(hd, x + startDrawPointX, y + startDrawPointY);
+    printf("sX %f sY %f eX %f eY %f\n", startDrawPointX, startDrawPointY, endDrawPointX, endDrawPointY);
+
+    // // ! Not sure about this
+    // if (anticlockwise)
+    //     connectLine(hd, x + endDrawPointX, y + endDrawPointY);
+    // else
+    //     connectLine(hd, x + startDrawPointX, y + startDrawPointY);
 
     writeSArc(hd->shaderInfo, x, y, radius, startAngle, endAngle, hd->antialiasing, anticlockwise);
 
-    // ! Do test here.
-    // * Set Begin Point if it's the first call after beginPath()
-    if (anticlockwise)
-        setBeginPoint(hd, x + startDrawPointX, y + startDrawPointY);
-    else
-        setBeginPoint(hd, x + endDrawPointX, y + endDrawPointY);
+    // // ! Do test here.
+    // // * Set Begin Point if it's the first call after beginPath()
+    // if (anticlockwise)
+    //     setBeginPoint(hd, x + startDrawPointX, y + startDrawPointY);
+    // else
+    //     setBeginPoint(hd, x + endDrawPointX, y + endDrawPointY);
 
-    // * Move the pen to the end point
-    if (anticlockwise)
-        movePen(hd, x + startDrawPointX, y + startDrawPointY);
-    else
-        movePen(hd, x + endDrawPointX, y + endDrawPointY);
+    // // * Move the pen to the end point
+    // if (anticlockwise)
+    //     movePen(hd, x + startDrawPointX, y + startDrawPointY);
+    // else
+    //     movePen(hd, x + endDrawPointX, y + endDrawPointY);
 }
 
 canvas_err_t roundRect(CanvaHandle_ptr hd, int x, int y, int width, int height, int radiiCount, ...)

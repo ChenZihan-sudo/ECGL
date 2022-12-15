@@ -7,8 +7,11 @@
 
 #include <math.h>
 #define PI (3.14159265358979)
-#define flEPS (1e-6)  // float epsilon(极小数) / polar decimal
-#define dbEPS (1e-16) // double epsilon(极小数) / polar decimal
+#define PI_0P5 (1.570796326794895) // 0.5 * PI
+#define PI_1P5 (4.71238898038468)  // 1.5 * PI
+#define PI_2 (6.28318530717959)    // 2.0 * PI
+#define flEPS (1e-6)               // float epsilon(极小数) / polar decimal
+#define dbEPS (1e-16)              // double epsilon(极小数) / polar decimal
 
 // Used for compare float number
 #define flEQUAL(A, B) ((fabs((A) - (B))) < (flEPS))

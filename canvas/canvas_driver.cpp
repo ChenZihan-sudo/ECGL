@@ -1,16 +1,15 @@
 #ifndef CANVAS_DRIVER_CPP
 #define CANVAS_DRIVER_CPP
 
-//#ifdef __cplusplus
-//extern "C"
+// #ifdef __cplusplus
+// extern "C"
 //{
-//#endif
+// #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
-
 
 #include "../display/display_config.h"
 #include "../datamodel/data_model.h"
@@ -19,9 +18,9 @@
 
 #include "../simECGL/simECGL.h"
 
-//#ifdef __cplusplus
-//}
-//#endif
+// #ifdef __cplusplus
+// }
+// #endif
 
 #ifndef __cplusplus
 #define true 1
@@ -128,13 +127,20 @@ void write_display_memory_on()
     simECGL_glWindowDisplay();
 }
 
-canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
+canvas_err_t IDM_writeColorIn(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
 {
     size_t addr = 2 * ((IDM_yBegin + y) * DISPLAY_WIDTH + (IDM_xBegin + x));
     if (addr >= sizeofDisplayMemory)
         return CANVAS_IDM_OUT_AREA_WRITE;
     displayMemory[addr] = colorHigh8b;
     displayMemory[addr + 1] = colorLow8b;
+    return CANVAS_OK;
+}
+
+canvas_err_t IDM_writeColor(int x, int y, uint8_t colorHigh8b, uint8_t colorLow8b)
+{
+    int aY = DISPLAY_HEIGHT - y;
+    IDM_writeColorIn(x, aY, colorHigh8b, colorLow8b);
     return CANVAS_OK;
 }
 
@@ -291,33 +297,33 @@ IDM_t displayMemory[2 * DISPLAY_WIDTH * IDM_ROW_TRANSFER_SIZE] = {0};
 #if USE_FRAMEWORK_RATE_TESTER
 FPSTester_ptr newFPSTester(FPSTester_ptr hdl)
 {
-    //if (hdl == nullptr)
+    // if (hdl == nullptr)
     //{
-    //    hdl = (FPSTester_ptr)malloc(sizeof(FPSTester_t));
-    //    hdl->isValid = false;
-    //    hdl->lastTick = xTaskGetTickCount();
-    //    hdl->FPS = 0;
-    //}
+    //     hdl = (FPSTester_ptr)malloc(sizeof(FPSTester_t));
+    //     hdl->isValid = false;
+    //     hdl->lastTick = xTaskGetTickCount();
+    //     hdl->FPS = 0;
+    // }
 
     return hdl;
 };
 
 int increaseFrameCount(FPSTester_ptr hdl)
 {
-    //if (hdl->isValid)
+    // if (hdl->isValid)
     //{
-    //    hdl->isValid = false;
-    //    hdl->lastTick = xTaskGetTickCount();
-    //    hdl->FPS = 0;
-    //}
+    //     hdl->isValid = false;
+    //     hdl->lastTick = xTaskGetTickCount();
+    //     hdl->FPS = 0;
+    // }
 
-    //hdl->FPS++;
+    // hdl->FPS++;
 
-    //if ((xTaskGetTickCount() - hdl->lastTick) * portTICK_PERIOD_MS >= 1000)
+    // if ((xTaskGetTickCount() - hdl->lastTick) * portTICK_PERIOD_MS >= 1000)
     //{
-    //    hdl->isValid = true;
-    //    return hdl->FPS;
-    //}
+    //     hdl->isValid = true;
+    //     return hdl->FPS;
+    // }
 
     return -1;
 };

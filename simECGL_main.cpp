@@ -5,7 +5,7 @@
 #include "canvas/canvas_config.h"
 #include "canvas/canvas_shader.h"
 #include "display/display_config.h"
-#include "canvas/canvas_graphics.h""
+#include "canvas/canvas_graphics.h"
 #include "simECGL/simECGL.h"
 #include <time.h>
 
@@ -54,13 +54,28 @@ int simECGL_main()
     ctx = newCanva(ctx);
 
     beginPath(ctx);
-    fillRect(0, 0, 200, 500, 0x222222);
+    fillRect(250, 0, 500, 500, 0x888888);
+    fillRect(0, 0, 250, 500, 0x222222);
 
     ctx->rgb888 = 0xFF0000;
-    arc(ctx, 100, 100, 20, 0.f * PI, 2.0 * PI, false);
-    roundRect(ctx, 100, 200, 100, 30, 1, 50);
+    // arc(ctx, 100, 100, 20, 0.f * PI, 1.7 * PI, false);
+    // roundRect(ctx, 100, 200, 100, 30, 1, 10);
+    // stroke(ctx);
+    // drawCircleAA(ctx, 100, 200, 20, true);
+    // write_display_memory_on();
+
+    moveTo(ctx, 100, 150);
+    lineTo(ctx, 200, 100);
+    lineTo(ctx, 50, 400);
+
+    moveTo(ctx, 100, 150);
+    arcTo(ctx, 200, 100, 50, 400, 30);
+
+    // arc(ctx, 300, 300, 30, 0.012496 * PI, 0.791154 * PI, false);
+
     stroke(ctx);
-    drawCircleAA(ctx, 100, 200, 20, true);
+    //fill(ctx);
+
     write_display_memory_on();
 
     Iterator_ptr itor = newShaderInfoIterator(ctx);
